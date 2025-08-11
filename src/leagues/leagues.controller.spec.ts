@@ -69,15 +69,6 @@ describe('LeaguesController', () => {
       expect(await controller.findOne(1)).toEqual(mockLeague);
       expect(service.findOne).toHaveBeenCalledWith(1);
     });
-    // it('should throw NotFoundException', async () => {
-    //   try {
-    //     await service.findOne(1000);
-    //   } catch (error: any) {
-    //     expect(error.message).toEqual('Not Found');
-    //     //expect(error.status).toEqual('League #1000 not found');
-    //     expect(error.name).toEqual('NotFoundException');
-    //   }
-    // });
   });
 
   it('should create a new league', async () => {
