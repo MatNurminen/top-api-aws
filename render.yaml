@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: nest-api
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm run start:prod
+    autoDeploy: true
+    envVars:
+      # PostgreSQL (вручную в UI Render)
+      - key: DATABASE_USER
+        value: ${DATABASE_USER}
+      - key: DATABASE_PASSWORD
+        value: ${DATABASE_PASSWORD}
+      - key: DATABASE_PORT
+        value: ${DATABASE_PORT}
+      - key: DATABASE_HOST
+        value: ${DATABASE_HOST}
+      - key: DATABASE_NAME
+        value: ${DATABASE_NAME}
+
+      # Cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ${CLOUDINARY_CLOUD_NAME}
+      - key: CLOUDINARY_API_KEY
+        value: ${CLOUDINARY_API_KEY}
+      - key: CLOUDINARY_API_SECRET
+        value: ${CLOUDINARY_API_SECRET}
+      - key: CLOUDINARY_ROOT_FOLDER
+        value: ${CLOUDINARY_ROOT_FOLDER}
+
+      # Cloudflare R2
+      - key: CLOUDFLARE_BUCKET_NAME
+        value: ${CLOUDFLARE_BUCKET_NAME}
+      - key: CLOUDFLARE_ROOT_FOLDER
+        value: ${CLOUDFLARE_ROOT_FOLDER}
+      - key: CLOUDFLARE_R2_ENDPOINT
+        value: ${CLOUDFLARE_R2_ENDPOINT}
+      - key: CLOUDFLARE_ACCESS_KEY_ID
+        value: ${CLOUDFLARE_ACCESS_KEY_ID}
+      - key: CLOUDFLARE_SECRET_ACCESS_KEY
+        value: ${CLOUDFLARE_SECRET_ACCESS_KEY}
+      - key: CLOUDFLARE_PUBLIC_URL
+        value: ${CLOUDFLARE_PUBLIC_URL}
+
+      # Прочее
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
