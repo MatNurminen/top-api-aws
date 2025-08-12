@@ -52,15 +52,35 @@ describe('NationsService', () => {
         order: { name: 'ASC' },
       });
     });
+
+    it('should return an empty array if no nations are found', async () => {
+      jest.spyOn(nationRepository, 'find').mockResolvedValue([]);
+      const result = await service.findAll();
+      expect(result).toEqual([]);
+      expect(nationRepository.find).toHaveBeenCalledWith({
+        order: { name: 'ASC' },
+      });
+    });
   });
 
-  it('should throw NotFoundException if nation not found', async () => {
-    jest.spyOn(nationRepository, 'findOne').mockResolvedValue(null);
-    await expect(service.findOne(999)).rejects.toThrow(
-      new NotFoundException(`Nation #999 not found`),
-    );
-    expect(nationRepository.findOne).toHaveBeenCalledWith({
-      where: { id: 999 },
+  describe('findOne', () => {
+    it('should return a nation by id', async () => {
+      jest.spyOn(nationRepository, 'findOne').mockResolvedValue(mockNation);
+      const result = await service.findOne(1);
+      expect(result).toEqual(mockNation);
+      expect(nationRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
+    });
+
+    it('should throw NotFoundException if nation not found', async () => {
+      jest.spyOn(nationRepository, 'findOne').mockResolvedValue(null);
+      await expect(service.findOne(999)).rejects.toThrow(
+        new NotFoundException(`Nation #999 not found`),
+      );
+      expect(nationRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 999 },
+      });
     });
   });
 

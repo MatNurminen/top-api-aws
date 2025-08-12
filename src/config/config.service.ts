@@ -29,7 +29,7 @@ class ConfigService {
       database: this.getValue('DATABASE_NAME'),
       autoLoadEntities: true,
       synchronize: false,
-      ssl: true,
+      //ssl: true,
       logging: ['query'],
     };
   }

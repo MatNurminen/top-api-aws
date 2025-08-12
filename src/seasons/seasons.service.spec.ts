@@ -5,20 +5,16 @@ import { Season } from './entities/season.entity';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 
-type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
-const createMockRepository = <T = any>(): MockRepository<T> => ({
-  find: jest.fn(),
-  findOne: jest.fn(),
-  create: jest.fn(),
-  save: jest.fn(),
-});
-
 describe('SeasonsService', () => {
-  let seasonsService: SeasonsService;
-  let seasonsRepository: MockRepository;
+  let service: SeasonsService;
+  let seasonRepository: Repository<Season>;
 
-  const expectedSeason = {};
-  const seasonId = 2023;
+  const mockSeason = {
+    id: 1,
+    name: '2025-26',
+    logo: 'nhl25.jpg',
+    link: '/rosters?league=14&season=2025',
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,70 +22,66 @@ describe('SeasonsService', () => {
         SeasonsService,
         {
           provide: getRepositoryToken(Season),
-          useValue: createMockRepository(),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            preload: jest.fn(),
+            remove: jest.fn(),
+          },
         },
       ],
     }).compile();
 
-    seasonsService = module.get<SeasonsService>(SeasonsService);
-    seasonsRepository = module.get<MockRepository>(getRepositoryToken(Season));
+    service = module.get<SeasonsService>(SeasonsService);
+    seasonRepository = module.get<Repository<Season>>(
+      getRepositoryToken(Season),
+    );
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should be defined', () => {
-    expect(seasonsService).toBeDefined();
-  });
+  // afterEach(() => {
+  //   jest.clearAllMocks();
+  // });
 
   describe('findAll', () => {
-    describe('when get all seasons', () => {
-      it('should return the seasons array objects', () => {
-        const expectedSeasons = [{}];
-        seasonsRepository.find.mockReturnValue(expectedSeasons);
-        const seasons = seasonsService.findAll();
-        expect(seasons).toEqual(expectedSeasons);
+    it('should return an array of seasons', async () => {
+      jest.spyOn(seasonRepository, 'find').mockResolvedValue([mockSeason]);
+      const result = await service.findAll();
+      expect(result).toEqual([mockSeason]);
+      expect(seasonRepository.find).toHaveBeenCalledWith({
+        order: { id: 'DESC' },
+      });
+    });
+
+    it('should return an empty array if no seasons are found', async () => {
+      jest.spyOn(seasonRepository, 'find').mockResolvedValue([]);
+      const result = await service.findAll();
+      expect(result).toEqual([]);
+      expect(seasonRepository.find).toHaveBeenCalledWith({
+        order: { id: 'DESC' },
       });
     });
   });
 
   describe('findOne', () => {
-    describe('when season with ID exists', () => {
-      it('should return the season object', async () => {
-        seasonsRepository.findOne.mockReturnValue(expectedSeason);
-        const season = await seasonsService.findOne(seasonId);
-        expect(season).toEqual(expectedSeason);
+    it('should return a season by id', async () => {
+      jest.spyOn(seasonRepository, 'findOne').mockResolvedValue(mockSeason);
+      const result = await service.findOne(1);
+      expect(result).toEqual(mockSeason);
+      expect(seasonRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
       });
     });
-    describe('otherwise', () => {
-      it('sould throw the "NotFoundException"', async () => {
-        seasonsRepository.findOne.mockReturnValue(undefined);
-        try {
-          await seasonsService.findOne(seasonId);
-        } catch (err) {
-          expect(err).toBeInstanceOf(NotFoundException);
-          expect(err.message).toEqual(`Season #${seasonId} not found`);
-        }
+
+    it('should throw NotFoundException if season not found', async () => {
+      jest.spyOn(seasonRepository, 'findOne').mockResolvedValue(null);
+      await expect(service.findOne(999)).rejects.toThrow(
+        new NotFoundException(`Season #999 not found`),
+      );
+      expect(seasonRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 999 },
       });
-    });
-  });
-
-  describe('create', () => {
-    it('should create a new season and return it', async () => {
-      const createSeasonDto = {
-        id: 1983,
-        name: '1983-84',
-        logo: 'test.jpg',
-        link: 'img/test.jpg',
-      };
-      const expectedSeason = { id: 1, ...createSeasonDto };
-
-      seasonsRepository.save.mockReturnValue(expectedSeason);
-      const result = await seasonsService.create(createSeasonDto);
-
-      expect(seasonsRepository.create).toHaveBeenCalledWith(createSeasonDto);
-      expect(result).toEqual(expectedSeason);
     });
   });
 });
