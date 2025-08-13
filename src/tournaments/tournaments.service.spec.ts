@@ -10,6 +10,7 @@ import { League } from '../leagues/entities/league.entity';
 import { Season } from '../seasons/entities/season.entity';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
+import { TournamentByLeague } from './entities/tournamentByLeague.entity';
 
 jest.mock('../common/utils/entity-validator.util', () => ({
   validateEntityExists: jest.fn(),
@@ -354,12 +355,29 @@ describe('TournamentsService', () => {
   });
 
   describe('tournamentsByLeague', () => {
+    it('should create and check an instance of TournamentByLeague', async () => {
+      const instance = plainToClass(TournamentByLeague, mockTournamentByLeague);
+      expect(instance).toBeInstanceOf(TournamentByLeague);
+      expect(instance.id).toBe(1);
+      expect(instance.season_id).toBe(1);
+      expect(instance.league_id).toBe(1);
+      expect(instance.season).toBe('2023');
+      expect(instance.league).toBe('Liiga');
+      expect(instance.logo).toBe('logo.png');
+    });
+
     it('should return tournaments by league', async () => {
       jest
         .spyOn(tournamentRepository, 'query')
         .mockResolvedValue([mockTournamentByLeague]);
       const result = await service.tournamentsByLeague({ leagueId: 1 });
       expect(result).toEqual([mockTournamentByLeague]);
+      expect(result[0]).toHaveProperty('id', 1);
+      expect(result[0]).toHaveProperty('season_id', 1);
+      expect(result[0]).toHaveProperty('league_id', 1);
+      expect(result[0]).toHaveProperty('season', '2023');
+      expect(result[0]).toHaveProperty('league', 'Liiga');
+      expect(result[0]).toHaveProperty('logo', 'logo.png');
       expect(tournamentRepository.query).toHaveBeenCalledWith(
         expect.any(String),
         [1],
