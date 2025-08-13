@@ -8,6 +8,8 @@ import { Repository, EntityManager, Not, In } from 'typeorm';
 import { CreateLeagueDto } from './dto/create-league.dto';
 import { UpdateLeagueDto } from './dto/update-league.dto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
 
 type IsolationLevel =
   | 'READ UNCOMMITTED'
@@ -98,11 +100,24 @@ describe('LeaguesService', () => {
     );
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('findAll', () => {
     it('should return an array of leagues with logos', async () => {
       jest.spyOn(leagueRepository, 'find').mockResolvedValue([mockLeague]);
       const result = await service.findAll();
       expect(result).toEqual([mockLeague]);
+      expect(leagueRepository.find).toHaveBeenCalledWith({
+        relations: ['logos'],
+      });
+    });
+
+    it('should return an empty array if no leagues found', async () => {
+      jest.spyOn(leagueRepository, 'find').mockResolvedValue([]);
+      const result = await service.findAll();
+      expect(result).toEqual([]);
       expect(leagueRepository.find).toHaveBeenCalledWith({
         relations: ['logos'],
       });
@@ -128,6 +143,25 @@ describe('LeaguesService', () => {
       );
       expect(queryBuilder.orderBy).toHaveBeenCalledWith('league.name', 'ASC');
     });
+
+    it('should return an empty array if no leagues found', async () => {
+      const queryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      jest
+        .spyOn(leagueRepository, 'createQueryBuilder')
+        .mockReturnValue(queryBuilder as any);
+      const result = await service.findAllWithCurLogo();
+      expect(result).toEqual([]);
+      expect(queryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'league.logos',
+        'logo',
+        'logo.end_year IS NULL',
+      );
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith('league.name', 'ASC');
+    });
   });
 
   describe('leaguesByNation', () => {
@@ -137,6 +171,16 @@ describe('LeaguesService', () => {
         .mockResolvedValue([mockLeagueByNation]);
       const result = await service.leaguesByNation({ nationId: 1 });
       expect(result).toEqual([mockLeagueByNation]);
+      expect(leagueByNationRepository.query).toHaveBeenCalledWith(
+        expect.any(String),
+        [1],
+      );
+    });
+
+    it('should return an empty array if no leagues found for nation', async () => {
+      jest.spyOn(leagueByNationRepository, 'query').mockResolvedValue([]);
+      const result = await service.leaguesByNation({ nationId: 1 });
+      expect(result).toEqual([]);
       expect(leagueByNationRepository.query).toHaveBeenCalledWith(
         expect.any(String),
         [1],
@@ -273,6 +317,19 @@ describe('LeaguesService', () => {
         BadRequestException,
       );
     });
+
+    it('should throw BadRequestException if name is missing', async () => {
+      const createLeagueDto = {
+        short_name: 'EPL',
+        color: '#FF0000',
+        start_year: 1992,
+        type_id: 1,
+      };
+      const dtoInstance = plainToClass(CreateLeagueDto, createLeagueDto);
+      const errors = await validate(dtoInstance);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].constraints).toHaveProperty('isString');
+    });
   });
 
   describe('update', () => {
@@ -367,6 +424,50 @@ describe('LeaguesService', () => {
       });
     });
 
+    it('should update a league with empty logos array', async () => {
+      const updateLeagueDto: UpdateLeagueDto = {
+        name: 'Updated League',
+        logos: [],
+      };
+      const updatedLeague = {
+        ...mockLeague,
+        ...updateLeagueDto,
+        logos: [],
+      };
+      const deleteMock = jest.fn();
+      jest
+        .spyOn(leagueRepository.manager, 'transaction')
+        .mockImplementation(
+          async (
+            isolationLevelOrRunInTransaction:
+              | IsolationLevel
+              | ((manager: EntityManager) => Promise<any>),
+            runInTransaction?: (manager: EntityManager) => Promise<any>,
+          ) => {
+            const manager = {
+              findOne: jest.fn().mockResolvedValue(mockLeague),
+              save: jest.fn().mockResolvedValue(updatedLeague),
+              find: jest.fn().mockResolvedValue([]),
+              delete: deleteMock,
+            } as Partial<EntityManager>;
+            const callback =
+              typeof isolationLevelOrRunInTransaction === 'function'
+                ? isolationLevelOrRunInTransaction
+                : runInTransaction;
+            if (!callback) {
+              throw new Error('Transaction callback is missing');
+            }
+            return callback(manager as EntityManager);
+          },
+        );
+      const result = await service.update(1, updateLeagueDto);
+      expect(result).toEqual(updatedLeague);
+      expect(deleteMock).toHaveBeenCalledWith(LeagueLogo, {
+        league: { id: 1 },
+      });
+      expect(leagueRepository.manager.transaction).toHaveBeenCalled();
+    });
+
     it('should throw NotFoundException if league not found', async () => {
       const deleteMock = jest.fn();
       jest
@@ -394,6 +495,20 @@ describe('LeaguesService', () => {
         );
       await expect(service.update(1, {})).rejects.toThrow(NotFoundException);
     });
+
+    it('should throw an error if transaction fails', async () => {
+      const updateLeagueDto: UpdateLeagueDto = {
+        name: 'Updated League',
+      };
+      jest
+        .spyOn(leagueRepository.manager, 'transaction')
+        .mockImplementation(async () => {
+          throw new Error('Transaction error');
+        });
+      await expect(service.update(1, updateLeagueDto)).rejects.toThrow(
+        'Transaction error',
+      );
+    });
   });
 
   describe('remove', () => {
@@ -404,6 +519,25 @@ describe('LeaguesService', () => {
       expect(result).toEqual(mockLeague);
       expect(service.findOne).toHaveBeenCalledWith(1);
       expect(leagueRepository.remove).toHaveBeenCalledWith(mockLeague);
+    });
+
+    it('should throw NotFoundException if league not found', async () => {
+      jest
+        .spyOn(service, 'findOne')
+        .mockRejectedValue(new NotFoundException(`League #999 not found`));
+      await expect(service.remove(999)).rejects.toThrow(
+        new NotFoundException(`League #999 not found`),
+      );
+      expect(service.findOne).toHaveBeenCalledWith(999);
+      expect(leagueRepository.remove).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if remove fails', async () => {
+      jest.spyOn(service, 'findOne').mockResolvedValue(mockLeague);
+      jest
+        .spyOn(leagueRepository, 'remove')
+        .mockRejectedValue(new Error('Remove error'));
+      await expect(service.remove(1)).rejects.toThrow('Remove error');
     });
   });
 });

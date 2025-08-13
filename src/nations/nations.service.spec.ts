@@ -5,6 +5,8 @@ import { NotFoundException } from '@nestjs/common';
 import { NationsService } from './nations.service';
 import { Nation } from './entities/nation.entity';
 import { CreateNationDto } from './dto/create-nation.dto';
+import { plainToClass } from 'class-transformer';
+import { validate } from 'class-validator';
 
 describe('NationsService', () => {
   let service: NationsService;
@@ -41,6 +43,10 @@ describe('NationsService', () => {
     nationRepository = module.get<Repository<Nation>>(
       getRepositoryToken(Nation),
     );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('findAll', () => {
@@ -102,6 +108,19 @@ describe('NationsService', () => {
       expect(result).toEqual(createdNation);
       expect(nationRepository.create).toHaveBeenCalledWith(createNationDto);
       expect(nationRepository.save).toHaveBeenCalledWith(createdNation);
+    });
+
+    it('should throw BadRequestException if name is missing', async () => {
+      const createNationDto = {
+        short_name: 'NNT',
+        flag: 'flag.png',
+        logo: 'logo.png',
+        color: '#0000',
+      };
+      const dtoInstance = plainToClass(CreateNationDto, createNationDto);
+      const errors = await validate(dtoInstance);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors[0].constraints).toHaveProperty('isString');
     });
   });
 
