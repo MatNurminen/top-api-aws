@@ -70,7 +70,7 @@ export class TeamsStatsService {
     const { nationId, shortName, typeId, limit } = params;
 
     let query = `SELECT tournaments.season_id, leagues.short_name, teams_tournaments.postseason, 
-      teams.id AS team_id FROM tournaments
+      leagues.id AS league_id, teams.id AS team_id FROM tournaments
       INNER JOIN leagues ON tournaments.league_id = leagues.id
       INNER JOIN teams_tournaments ON tournaments.id = teams_tournaments.tournament_id
       INNER JOIN teams ON teams_tournaments.team_id = teams.id

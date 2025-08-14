@@ -11,5 +11,8 @@ export class TeamForNation {
   postseason: string;
 
   @Column()
+  league_id: number;
+
+  @Column()
   team_id: number;
 }
