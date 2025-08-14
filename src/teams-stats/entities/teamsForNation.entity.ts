@@ -9,4 +9,7 @@ export class TeamForNation {
 
   @Column()
   postseason: string;
+
+  @Column()
+  team_id: number;
 }
