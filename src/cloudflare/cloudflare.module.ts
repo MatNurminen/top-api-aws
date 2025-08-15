@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { UploadCFController } from './cloudflare.contoroller';
+import { UploadCFController } from './cloudflare.controller';
 import { UploadCFService } from './cloudflare.service';
 
 @Module({

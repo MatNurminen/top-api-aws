@@ -25,8 +25,6 @@ export class Nation {
   @OneToMany((type) => Team, (team) => team.nation_id)
   teams?: Team[];
 
-  @OneToMany((type) => Player, (player) => player.nation_id, {
-    cascade: true, // ['insert']
-  })
+  @OneToMany((type) => Player, (player) => player.nation_id)
   players?: Player[];
 }
