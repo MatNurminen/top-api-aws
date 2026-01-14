@@ -30,6 +30,9 @@ class ConfigService {
       autoLoadEntities: true,
       synchronize: false,
       //ssl: true,
+      ssl: {
+        rejectUnauthorized: false,
+      },
       logging: ['query'],
     };
   }
