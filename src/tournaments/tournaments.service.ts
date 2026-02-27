@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Tournament } from './entities/tournament.entity';
 import { Repository } from 'typeorm';
@@ -37,17 +37,26 @@ export class TournamentsService {
   }
 
   async create(createTournamentDto: CreateTournamentDto): Promise<Tournament> {
-    const { season_id, league_id } = createTournamentDto;
+  const { season_id, league_id } = createTournamentDto;
 
-    await Promise.all([
-      validateEntityExists(this.seasonRepository, Season, season_id, 'Season'),
-      validateEntityExists(this.leagueRepository, League, league_id, 'League'),
-    ]);
+  await Promise.all([
+    validateEntityExists(this.seasonRepository, Season, season_id, 'Season'),
+    validateEntityExists(this.leagueRepository, League, league_id, 'League'),
+  ]);
 
-    const tournament = this.tournamentRepository.create(createTournamentDto);
-    return this.tournamentRepository.save(tournament);
+  const tournament = this.tournamentRepository.create(createTournamentDto);
+  
+  try {
+    return await this.tournamentRepository.save(tournament);
+  } catch (error) {
+    if (error.code === '23505' || error.code === 'ER_DUP_ENTRY') {
+      throw new ConflictException(
+        `Турнир для сезона ${season_id} и лиги ${league_id} уже существует`
+      );
+    }
+    throw error;
   }
-
+}
   async update(
     id: number,
     updateTournamentDto: UpdateTournamentDto,

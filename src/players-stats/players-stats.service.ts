@@ -111,7 +111,7 @@ export class PlayersStatsService {
       players_tournaments.games, players_tournaments.goals, players_tournaments.postseason, players.first_name, 
       players.last_name, players.jersey_number, players.player_position, players.player_order, 
       players.nation_id, players.birth_year, players.height, players.weight, players.draft_team_id, 
-      players.birth_year, players.height, tournaments.season_id, tournaments.league_id, teams_tournaments.team_id, 
+      tournaments.season_id, tournaments.league_id, teams_tournaments.team_id, 
       teams.full_name, leagues.short_name, seasons.name, nations_player.flag AS player_flag, 
       nations_team.flag AS team_flag, leagues.type_id, player_club.club_name 
       FROM players_tournaments
@@ -132,8 +132,9 @@ export class PlayersStatsService {
         INNER JOIN teams t ON tt.team_id = t.id
         INNER JOIN tournaments tr ON tt.tournament_id = tr.id
         INNER JOIN leagues l ON tr.league_id = l.id
-        WHERE l.type_id = 1 
+        WHERE l.type_id = 1
           ${seasonId ? `AND tr.season_id = (SELECT season_id FROM current_season)` : ''}
+          ORDER BY pt.player_id, tr.season_id DESC
       ) player_club ON player_club.player_id = players_tournaments.player_id
       WHERE true
     `;
@@ -143,14 +144,14 @@ export class PlayersStatsService {
 
     if (leagueId && leagueId.length > 0) {
       const placeholders = leagueId.map(() => `$${paramIndex++}`).join(', ');
-      query += ` AND leagues.id IN (${placeholders})`; // Изменено с leagues.league_id на leagues.id
+      query += ` AND leagues.id IN (${placeholders})`;
       queryParams.push(...leagueId.map((id) => Number(id)));
     }
     if (excludeLeagueId && excludeLeagueId.length > 0) {
       const placeholders = excludeLeagueId
         .map(() => `$${paramIndex++}`)
         .join(', ');
-      query += ` AND leagues.id NOT IN (${placeholders})`; // Изменено с leagues.league_id на leagues.id
+      query += ` AND leagues.id NOT IN (${placeholders})`;
       queryParams.push(...excludeLeagueId.map((id) => Number(id)));
     }
     if (teamId) {
