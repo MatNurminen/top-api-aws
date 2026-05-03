@@ -5,6 +5,7 @@ import {
   PlayerStatLeague,
   PlayerStatTeam,
   PlayerStatTotal,
+  PlayerStatTotalByClub,
 } from './entities/players-stats.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -76,6 +77,70 @@ export class PlayersStatsService {
         players.player_position, 
         players.player_order, 
         nations.flag
+      ORDER BY goals_t DESC
+    `;
+
+    if (limit) {
+      query += ` LIMIT $${paramIndex}`;
+      queryParams.push(limit);
+    }
+
+    return await this.playerStatTotalRepository.query(query, queryParams);
+  }
+
+  async playersStatsTotalByTeam(
+    params: PlayersStatsTotalParamsDto,
+  ): Promise<PlayerStatTotalByClub[]> {
+    const { leagueId, teamId, nationId, playerOrd, limit } = params;
+
+    let query = `SELECT players_tournaments.player_id, players.first_name, players.last_name, 
+      players.player_position, players.player_order, nations.flag AS player_flag,
+      teams_tournaments.team_id, teams.full_name, 
+      SUM(players_tournaments.games) as games_t, SUM(players_tournaments.goals) as goals_t, 
+      COUNT(*) as years 
+      FROM players_tournaments
+      INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
+      INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
+      INNER JOIN players ON players_tournaments.player_id = players.id
+      INNER JOIN nations ON players.nation_id = nations.id
+      INNER JOIN teams ON teams_tournaments.team_id = teams.id
+      WHERE true
+    `;
+
+    const queryParams: any[] = [];
+    let paramIndex = 1;
+
+    if (leagueId) {
+      query += ` AND tournaments.league_id = $${paramIndex}`;
+      queryParams.push(leagueId);
+      paramIndex++;
+    }
+    if (teamId) {
+      query += ` AND teams_tournaments.team_id = $${paramIndex}`;
+      queryParams.push(teamId);
+      paramIndex++;
+    }
+    if (nationId) {
+      query += ` AND nations.id = $${paramIndex}`;
+      queryParams.push(nationId);
+      paramIndex++;
+    }
+    if (playerOrd && playerOrd.length > 0) {
+      const placeholders = playerOrd.map(() => `$${paramIndex++}`).join(', ');
+      query += ` AND players.player_order IN (${placeholders})`;
+      queryParams.push(...playerOrd);
+    }
+
+    query += `
+      GROUP BY 
+        players_tournaments.player_id, 
+        players.first_name, 
+        players.last_name, 
+        players.player_position, 
+        players.player_order, 
+        nations.flag,
+        teams_tournaments.team_id,
+  		  teams.full_name
       ORDER BY goals_t DESC
     `;
 

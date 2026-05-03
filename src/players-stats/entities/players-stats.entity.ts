@@ -7,9 +7,12 @@ export class PlayerStatTotal {
   player_flag: string;
   games_t: number;
   goals_t: number;
-  start_year: number;
-  end_year: number;
   years: number;
+}
+
+export class PlayerStatTotalByClub extends PlayerStatTotal {
+  team_id: number;
+  full_name: string;
 }
 
 export class PlayerStatDetail {

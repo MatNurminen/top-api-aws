@@ -7,6 +7,7 @@ import {
   PlayerStatLeague,
   PlayerStatTeam,
   PlayerStatTotal,
+  PlayerStatTotalByClub,
 } from './entities/players-stats.entity';
 import { ApiTags } from '@nestjs/swagger';
 import { PlayersStatsDetailParamsDto } from './params-dto/players-stats-detail.dto';
@@ -22,6 +23,13 @@ export class PlayersStatsController {
     @Query() query: PlayersStatsTotalParamsDto,
   ): Promise<PlayerStatTotal[]> {
     return this.playersStatsService.playersStatsTotal(query);
+  }
+
+  @Get('total-by-team')
+  async getPlayersTotalStatsByTeam(
+    @Query() query: PlayersStatsTotalParamsDto,
+  ): Promise<PlayerStatTotalByClub[]> {
+    return this.playersStatsService.playersStatsTotalByTeam(query);
   }
 
   @Get('detail')

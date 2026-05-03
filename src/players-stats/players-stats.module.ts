@@ -6,6 +6,7 @@ import {
   PlayerStatLeague,
   PlayerStatTeam,
   PlayerStatTotal,
+  PlayerStatTotalByClub,
 } from './entities/players-stats.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PlayersStatsController } from './players-stats.controller';
@@ -14,6 +15,7 @@ import { PlayersStatsController } from './players-stats.controller';
   imports: [
     TypeOrmModule.forFeature([
       PlayerStatTotal,
+      PlayerStatTotalByClub,
       PlayerStatDetail,
       CountPlayerByNation,
       PlayerStatLeague,
