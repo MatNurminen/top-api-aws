@@ -8,6 +8,8 @@ export class PlayerStatTotal {
   games_t: number;
   goals_t: number;
   years: number;
+  nation_id: number;
+  player_nation: string;
 }
 
 export class PlayerStatTotalByClub extends PlayerStatTotal {
@@ -41,9 +43,9 @@ export class PlayerStatDetail {
   short_name: string;
   name: string;
   player_flag: string;
+  player_nation: string;
   team_flag: string;
   type_id: number;
-  club_name: string;
 }
 
 export class CountPlayerByNation {
@@ -70,4 +72,6 @@ export class PlayerStatTeam {
   games_t: number;
   goals_t: number;
   years: number;
+  nation_id: number;
+  player_nation: string;
 }
