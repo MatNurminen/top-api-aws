@@ -31,7 +31,7 @@ export class PlayersStatsService {
   async playersStatsTotal(
     params: PlayersStatsTotalParamsDto,
   ): Promise<PlayerStatTotal[]> {
-    const { leagueId, teamId, nationId, playerOrd, limit } = params;
+    const { leagueId, teamId, nationId, playerOrd, limit, offset } = params;
 
     let query = `SELECT players_tournaments.player_id, players.first_name, players.last_name, 
       players.player_position, players.player_order, nations.flag AS player_flag,
@@ -86,6 +86,12 @@ export class PlayersStatsService {
     if (limit) {
       query += ` LIMIT $${paramIndex}`;
       queryParams.push(limit);
+      paramIndex++;
+    }
+    if (offset) {
+      query += ` OFFSET $${paramIndex}`;
+      queryParams.push(offset);
+      paramIndex++;
     }
 
     return await this.playerStatTotalRepository.query(query, queryParams);
@@ -170,6 +176,7 @@ export class PlayersStatsService {
       playerId,
       typeId,
       limit,
+      offset,
       playerOrd,
     } = params;
 
@@ -317,6 +324,12 @@ export class PlayersStatsService {
     if (limit) {
       query += ` LIMIT $${paramIndex}`;
       queryParams.push(Number(limit));
+      paramIndex++;
+    }
+    if (offset) {
+      query += ` OFFSET $${paramIndex}`;
+      queryParams.push(Number(offset));
+      paramIndex++;
     }
 
     try {
