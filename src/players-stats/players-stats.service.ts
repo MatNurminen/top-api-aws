@@ -80,7 +80,7 @@ export class PlayersStatsService {
         nations.flag,
         nations.id,
 		    nations.name
-      ORDER BY goals_t DESC
+      ORDER BY goals_t DESC, last_name, first_name
     `;
 
     if (limit) {
@@ -100,7 +100,7 @@ export class PlayersStatsService {
   async playersStatsTotalByTeam(
     params: PlayersStatsTotalParamsDto,
   ): Promise<PlayerStatTotalByClub[]> {
-    const { leagueId, teamId, nationId, playerOrd, limit } = params;
+    const { leagueId, teamId, nationId, playerOrd, limit, offset } = params;
 
     let query = `SELECT players_tournaments.player_id, players.first_name, players.last_name, 
       players.player_position, players.player_order, nations.flag AS player_flag,
@@ -153,12 +153,18 @@ export class PlayersStatsService {
         nations.name,
         teams_tournaments.team_id,
   		  teams.full_name
-      ORDER BY goals_t DESC
+      ORDER BY goals_t DESC, last_name, first_name
     `;
 
     if (limit) {
       query += ` LIMIT $${paramIndex}`;
       queryParams.push(limit);
+      paramIndex++;
+    }
+    if (offset) {
+      query += ` OFFSET $${paramIndex}`;
+      queryParams.push(Number(offset));
+      paramIndex++;
     }
 
     return await this.playerStatTotalRepository.query(query, queryParams);
@@ -319,7 +325,7 @@ export class PlayersStatsService {
       queryParams.push(...playerOrd.map((ord) => Number(ord)));
     }
 
-    query += ` ORDER BY players_tournaments.goals DESC`;
+    query += ` ORDER BY players_tournaments.goals DESC, last_name, first_name`;
 
     if (limit) {
       query += ` LIMIT $${paramIndex}`;
