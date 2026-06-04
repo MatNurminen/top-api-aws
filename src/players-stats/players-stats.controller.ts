@@ -12,6 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { PlayersStatsDetailParamsDto } from './params-dto/players-stats-detail.dto';
 import { CountPlayersByNationParamsDto } from './params-dto/count-players-by-nation.dto';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 
 @ApiTags('Players Stats')
 @Controller('players-stats')
@@ -21,21 +22,21 @@ export class PlayersStatsController {
   @Get('total')
   async getPlayersTotalStats(
     @Query() query: PlayersStatsTotalParamsDto,
-  ): Promise<PlayerStatTotal[]> {
+  ): Promise<PaginatedResponseDto<PlayerStatTotal>> {
     return this.playersStatsService.playersStatsTotal(query);
   }
 
   @Get('total-by-team')
-  async getPlayersTotalStatsByTeam(
+  async getPlayersTotalByTeamStats(
     @Query() query: PlayersStatsTotalParamsDto,
-  ): Promise<PlayerStatTotalByClub[]> {
+  ): Promise<PaginatedResponseDto<PlayerStatTotalByClub>> {
     return this.playersStatsService.playersStatsTotalByTeam(query);
   }
 
   @Get('detail')
   async getPlayersDetailStats(
     @Query() query: PlayersStatsDetailParamsDto,
-  ): Promise<PlayerStatDetail[]> {
+  ): Promise<PaginatedResponseDto<PlayerStatDetail>> {
     return this.playersStatsService.playersStatsDetails(query);
   }
 

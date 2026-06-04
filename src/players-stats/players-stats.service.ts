@@ -12,6 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PlayersStatsTotalParamsDto } from './params-dto/players-stats-total.dto';
 import { PlayersStatsDetailParamsDto } from './params-dto/players-stats-detail.dto';
 import { CountPlayersByNationParamsDto } from './params-dto/count-players-by-nation.dto';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 
 @Injectable()
 export class PlayersStatsService {
@@ -30,14 +31,15 @@ export class PlayersStatsService {
 
   async playersStatsTotal(
     params: PlayersStatsTotalParamsDto,
-  ): Promise<PlayerStatTotal[]> {
+  ): Promise<PaginatedResponseDto<PlayerStatTotal>> {
     const { leagueId, teamId, nationId, playerOrd, limit, offset } = params;
 
     let query = `SELECT players_tournaments.player_id, players.first_name, players.last_name, 
       players.player_position, players.player_order, nations.flag AS player_flag,
       nations.id as nation_id, nations.name as player_nation, 
       SUM(players_tournaments.games) as games_t, SUM(players_tournaments.goals) as goals_t, 
-      COUNT(*) as years 
+      COUNT(*) as years, 
+      COUNT(*) OVER() as total
       FROM players_tournaments
       INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
       INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
@@ -94,12 +96,21 @@ export class PlayersStatsService {
       paramIndex++;
     }
 
-    return await this.playerStatTotalRepository.query(query, queryParams);
+    const result = await this.playerStatTotalRepository.query(
+      query,
+      queryParams,
+    );
+    return new PaginatedResponseDto(
+      result,
+      Number(result[0]?.total ?? 0),
+      limit,
+      offset,
+    );
   }
 
   async playersStatsTotalByTeam(
     params: PlayersStatsTotalParamsDto,
-  ): Promise<PlayerStatTotalByClub[]> {
+  ): Promise<PaginatedResponseDto<PlayerStatTotalByClub>> {
     const { leagueId, teamId, nationId, playerOrd, limit, offset } = params;
 
     let query = `SELECT players_tournaments.player_id, players.first_name, players.last_name, 
@@ -107,7 +118,8 @@ export class PlayersStatsService {
       nations.id as nation_id, nations.name as player_nation,
       teams_tournaments.team_id, teams.full_name, 
       SUM(players_tournaments.games) as games_t, SUM(players_tournaments.goals) as goals_t, 
-      COUNT(*) as years 
+      COUNT(*) as years,
+      COUNT(*) OVER() as total
       FROM players_tournaments
       INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
       INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
@@ -167,12 +179,18 @@ export class PlayersStatsService {
       paramIndex++;
     }
 
-    return await this.playerStatTotalRepository.query(query, queryParams);
+    const result = await this.playerStatTotalRepository.query(query, queryParams);
+    return new PaginatedResponseDto(
+      result,
+      Number(result[0]?.total ?? 0),
+      limit,
+      offset,
+    );
   }
 
   async playersStatsDetails(
     params: PlayersStatsDetailParamsDto,
-  ): Promise<PlayerStatDetail[]> {
+  ): Promise<PaginatedResponseDto<PlayerStatDetail>> {
     const {
       leagueId,
       excludeLeagueId,
@@ -270,7 +288,8 @@ export class PlayersStatsService {
       tournaments.season_id, tournaments.league_id, teams_tournaments.team_id,
       teams.full_name,
       leagues.short_name, seasons.name, nations_player.flag AS player_flag, nations_player.name AS player_nation,
-      nations_team.flag AS team_flag, leagues.type_id, player_club.club_name
+      nations_team.flag AS team_flag, leagues.type_id, player_club.club_name,
+      COUNT(*) OVER() as total
     FROM players_tournaments
     INNER JOIN players ON players_tournaments.player_id = players.id
     INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
@@ -339,7 +358,16 @@ export class PlayersStatsService {
     }
 
     try {
-      return await this.playerStatDetailRepository.query(query, queryParams);
+      const result = await this.playerStatDetailRepository.query(
+        query,
+        queryParams,
+      );
+      return new PaginatedResponseDto(
+        result,
+        Number(result[0]?.total ?? 0),
+        limit,
+        offset,
+      );
     } catch (error) {
       console.error('Query error:', error);
       throw error;
