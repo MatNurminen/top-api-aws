@@ -10,6 +10,7 @@ import {
   Delete,
   Get,
   Param,
+  SetMetadata,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadCFService } from './cloudflare.service';
@@ -22,6 +23,7 @@ export class UploadCFController {
   constructor(private readonly uploadService: UploadCFService) {}
 
   @Post()
+  @SetMetadata('timeout', 30000)
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
