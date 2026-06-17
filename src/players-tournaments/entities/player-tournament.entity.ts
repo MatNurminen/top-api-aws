@@ -1,4 +1,3 @@
-import { PlayerPostseason } from '../../players-postseason/entities/player-postseason.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('players_tournaments')
@@ -17,9 +16,4 @@ export class PlayerTournament {
 
   @Column()
   goals: number;
-
-  @OneToMany((type) => PlayerPostseason, (playerPostseason) => playerPostseason.playerTournament, {
-    cascade: true,
-  })
-  postseason?: PlayerPostseason[];
 }
