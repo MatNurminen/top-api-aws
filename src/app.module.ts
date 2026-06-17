@@ -18,6 +18,7 @@ import { UploadModule } from './cloudinary/upload.module';
 import { LeagueTypesModule } from './league_types/league-types.module';
 import { UploadCFModule } from './cloudflare/cloudflare.module';
 import { PlayersTournamentsModule } from './players-tournaments/players-tournaments.module';
+import { PlayersPostseasonModule } from './players_postseason/players-postseason.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PlayersTournamentsModule } from './players-tournaments/players-tourname
     UploadModule,
     UploadCFModule,
     PlayersTournamentsModule,
+    PlayersPostseasonModule,
   ],
   controllers: [AppController],
   providers: [AppService],
