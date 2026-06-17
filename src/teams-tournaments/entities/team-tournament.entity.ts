@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('teams_tournaments')
 export class TeamTournament {
@@ -11,21 +11,24 @@ export class TeamTournament {
   @Column()
   team_id: number;
 
-  @Column()
-  games: number;
+  @Column({ nullable: true })
+  games?: number;
 
-  @Column()
-  wins: number;
+  @Column({ nullable: true })
+  wins?: number;
 
-  @Column()
-  ties: number;
+  @Column({ nullable: true })
+  ties?: number;
 
-  @Column()
-  losts: number;
+  @Column({ nullable: true })
+  losts?: number;
 
-  @Column()
-  goals_for: number;
+  @Column({ nullable: true })
+  goals_for?: number;
 
-  @Column()
-  goals_against: number;
+  @Column({ nullable: true })
+  goals_against?: number;
+
+  @Column('jsonb', { nullable: true })
+  postseason?: Record<string, any> | null;
 }
