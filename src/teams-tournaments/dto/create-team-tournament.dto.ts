@@ -51,10 +51,4 @@ export class CreateTeamTournamentDto {
   @Min(0)
   @Max(500)
   readonly goals_against?: number;
-
-  @ApiPropertyOptional({ description: 'The postseason description of a team' })
-  @IsOptional()
-  @IsString()
-  @Length(0, 250)
-  readonly postseason?: string;
 }
