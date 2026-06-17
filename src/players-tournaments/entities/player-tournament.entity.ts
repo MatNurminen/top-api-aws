@@ -1,4 +1,4 @@
-import { PlayerPostseason } from '../../players_postseason/entities/player-postseason.entity';
+import { PlayerPostseason } from '../../players-postseason/entities/player-postseason.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('players_tournaments')
