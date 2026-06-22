@@ -31,4 +31,12 @@ export class TeamsStatsController {
   ): Promise<TeamFact[]> {
     return this.teamsStatsService.teamFacts({ leagueId, seasonId });
   }
+
+  @Get('champions')
+  getTeamsChamions(
+    @Query('leagueId') leagueId: number,
+    @Query('seasonId') seasonId: number,
+  ): Promise<TeamFact[]> {
+    return this.teamsStatsService.teamChampions({ leagueId, seasonId });
+  }
 }

@@ -127,4 +127,21 @@ export class TeamsStatsService {
     );
     return teamFacts;
   }
+
+  async teamChampions(query: {
+    leagueId: number;
+    seasonId: number;
+  }): Promise<TeamFact[]> {
+    const teamFacts = await this.teamFactsRepository.query(
+      `SELECT season_id, team_id, full_name, postseason FROM teams_tournaments
+      INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
+      INNER JOIN leagues ON tournaments.league_id = leagues.id
+      INNER JOIN teams ON teams_tournaments.team_id = teams.id
+      WHERE league_id = $1 AND season_id = $2
+      AND postseason->>'title' = 'Champion'
+      ORDER BY season_id DESC`,
+      [query.leagueId, query.seasonId],
+    );
+    return teamFacts;
+  }
 }
