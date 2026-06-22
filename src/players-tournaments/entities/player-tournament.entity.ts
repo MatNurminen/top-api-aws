@@ -16,4 +16,7 @@ export class PlayerTournament {
 
   @Column()
   goals: number;
+
+  @Column('jsonb', { nullable: true })
+  postseason?: Record<string, any> | null;
 }

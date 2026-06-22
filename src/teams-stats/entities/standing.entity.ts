@@ -29,9 +29,6 @@ export class Standing {
   goals_against: number;
 
   @Column()
-  postseason: string;
-
-  @Column()
   gd: number;
 
   @Column()
@@ -51,4 +48,7 @@ export class Standing {
 
   @Column()
   logo: string;
+
+  @Column()
+  postseason?: Record<string, any> | null;
 }
