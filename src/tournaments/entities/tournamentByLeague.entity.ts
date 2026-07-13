@@ -11,9 +11,6 @@ export class TournamentByLeague {
   league_id: number;
 
   @Column()
-  description: string;
-
-  @Column()
   season: string;
 
   @Column()

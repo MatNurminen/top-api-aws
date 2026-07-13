@@ -18,9 +18,6 @@ export class Tournament {
   @Column()
   league_id: number;
 
-  @Column()
-  description: string;
-
   @ManyToOne((type) => League, (league) => league.id)
   @JoinColumn([{ name: 'league_id' }])
   league: League;
