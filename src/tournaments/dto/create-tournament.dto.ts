@@ -9,4 +9,8 @@ export class CreateTournamentDto {
   @ApiProperty({ description: 'The id of a league' })
   @IsInt()
   readonly league_id: number;
+
+  @ApiProperty({ description: 'The description of a league' })
+  @IsInt()
+  readonly description: string;
 }
