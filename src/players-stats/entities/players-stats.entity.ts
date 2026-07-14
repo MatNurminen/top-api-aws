@@ -46,6 +46,9 @@ export class PlayerStatDetail {
   player_nation: string;
   team_flag: string;
   type_id: number;
+  club_name: string;
+  league_name: string;
+  total: number;
 }
 
 export class CountPlayerByNation {

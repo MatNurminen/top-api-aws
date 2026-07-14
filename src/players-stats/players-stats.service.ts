@@ -220,7 +220,8 @@ export class PlayersStatsService {
     player_club AS (
       SELECT DISTINCT ON (pt.player_id)
         pt.player_id,
-        t.full_name AS club_name
+        t.full_name AS club_name,
+        l.short_name AS league_name
       FROM players_tournaments pt
       INNER JOIN teams_tournaments tt ON pt.teams_tournament_id = tt.id
       INNER JOIN teams t ON tt.team_id = t.id
@@ -231,53 +232,8 @@ export class PlayersStatsService {
     if (seasonId) {
       playerClubCte += ` AND tr.season_id = (SELECT season_id FROM current_season)`;
     }
-    if (leagueId && leagueId.length > 0) {
-      const placeholders = leagueId.map(() => `$${paramIndex++}`).join(', ');
-      playerClubCte += ` AND tr.league_id IN (${placeholders})`;
-      queryParams.push(...leagueId.map((id) => Number(id)));
-    }
-    if (excludeLeagueId && excludeLeagueId.length > 0) {
-      const placeholders = excludeLeagueId
-        .map(() => `$${paramIndex++}`)
-        .join(', ');
-      playerClubCte += ` AND tr.league_id NOT IN (${placeholders})`;
-      queryParams.push(...excludeLeagueId.map((id) => Number(id)));
-    }
-    if (teamId) {
-      playerClubCte += ` AND tt.team_id = $${paramIndex}`;
-      queryParams.push(Number(teamId));
-      paramIndex++;
-    }
-    if (nationId) {
-      playerClubCte += ` AND EXISTS (
-        SELECT 1 FROM players p 
-        WHERE p.id = pt.player_id 
-        AND p.nation_id = $${paramIndex}
-      )`;
-      queryParams.push(Number(nationId));
-      paramIndex++;
-    }
-    if (playerId) {
-      playerClubCte += ` AND pt.player_id = $${paramIndex}`;
-      queryParams.push(Number(playerId));
-      paramIndex++;
-    }
-    if (typeId) {
-      playerClubCte += ` AND l.type_id = $${paramIndex}`;
-      queryParams.push(Number(typeId));
-      paramIndex++;
-    }
-    if (playerOrd && playerOrd.length > 0) {
-      const placeholders = playerOrd.map(() => `$${paramIndex++}`).join(', ');
-      playerClubCte += ` AND EXISTS (
-        SELECT 1 FROM players p 
-        WHERE p.id = pt.player_id 
-        AND p.player_order IN (${placeholders})
-      )`;
-      queryParams.push(...playerOrd.map((ord) => Number(ord)));
-    }
 
-    playerClubCte += ` ORDER BY pt.player_id, tr.season_id DESC)`;
+    playerClubCte += ` ORDER BY pt.player_id, pt.games DESC NULLS LAST, tt.id DESC)`;
     ctes.push(playerClubCte);
 
     let query = `WITH ${ctes.join(',\n')}
@@ -288,8 +244,9 @@ export class PlayersStatsService {
       tournaments.season_id, tournaments.league_id, teams_tournaments.team_id,
       teams.full_name,
       leagues.short_name, seasons.name, nations_player.flag AS player_flag, nations_player.name AS player_nation,
-      nations_team.flag AS team_flag, leagues.type_id, player_club.club_name,
-      COUNT(*) OVER() as total
+      nations_team.flag AS team_flag, leagues.type_id, 
+      player_club.club_name, player_club.league_name,
+      COUNT(*) OVER()::int as total
     FROM players_tournaments
     INNER JOIN players ON players_tournaments.player_id = players.id
     INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
