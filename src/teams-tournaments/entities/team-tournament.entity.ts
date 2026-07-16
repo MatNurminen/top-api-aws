@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Postseason } from './types';
 
 @Entity('teams_tournaments')
 export class TeamTournament {
@@ -30,5 +31,5 @@ export class TeamTournament {
   goals_against?: number;
 
   @Column('jsonb', { nullable: true })
-  postseason?: Record<string, any> | null;
+  postseason?: Postseason | null;
 }
