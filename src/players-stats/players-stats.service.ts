@@ -337,7 +337,7 @@ export class PlayersStatsService {
     const { leagueId, seasonId, teamId, typeId } = params;
 
     let query = `SELECT nations.id, nations.name, nations.flag, nations.color,
-      COUNT(DISTINCT players.id) as count FROM players_tournaments
+      COUNT(DISTINCT players.id)::int as count FROM players_tournaments
       INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
       INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
       INNER JOIN seasons ON tournaments.season_id = seasons.id
