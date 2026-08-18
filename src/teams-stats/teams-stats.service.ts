@@ -61,7 +61,7 @@ export class TeamsStatsService {
       paramIndex++;
     }
 
-    query += ` ORDER BY pts DESC`;
+    query += ` ORDER BY pts DESC, full_name`;
 
     return await this.teamStatsRepository.query(query, queryParams);
   }
