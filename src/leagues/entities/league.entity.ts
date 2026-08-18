@@ -1,6 +1,7 @@
 import { Tournament } from '../../tournaments/entities/tournament.entity';
 import { LeagueLogo } from '../../league-logos/entities/league-logo.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Links } from './types';
 
 @Entity('leagues')
 export class League {
@@ -24,6 +25,9 @@ export class League {
 
   @Column()
   type_id: number;
+
+  @Column('jsonb', { nullable: true })
+  links?: Links | null;
 
   @OneToMany((type) => LeagueLogo, (leagueLogo) => leagueLogo.league, {
     cascade: true,

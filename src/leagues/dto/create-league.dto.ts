@@ -10,9 +10,11 @@ import {
   IsOptional,
   IsArray,
   ValidateNested,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UpdateLeagueLogoDto } from '../../league-logos/dto/update-league-logo.dto';
+import { Links } from '../entities/types';
 
 export class CreateLeagueDto {
   @ApiProperty({ description: 'The name of a league' })
@@ -47,6 +49,13 @@ export class CreateLeagueDto {
   @ApiProperty({ description: 'Type id of a league' })
   @IsInt()
   readonly type_id: number;
+
+  @ApiPropertyOptional({
+      description: 'The links of league',
+    })
+    @IsOptional()
+    @IsObject()
+    readonly links?: Links;
 
   @ApiPropertyOptional({ description: 'Array of logos' })
   @IsOptional()
