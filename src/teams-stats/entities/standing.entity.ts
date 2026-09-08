@@ -44,6 +44,9 @@ export class Standing {
   name: string;
 
   @Column()
+  league_id: number;
+
+  @Column()
   season: string;
 
   @Column()
