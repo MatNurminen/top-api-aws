@@ -5,7 +5,7 @@ import { Award } from './entities/award.entity';
 import { CreateAwardDto } from './dto/create-award.dto';
 import { League } from '../leagues/entities/league.entity';
 import { validateEntityExists } from '../common/utils/entity-validator.util';
-import { UpdateAwardDto } from './dto/update-award-logo.dto';
+import { UpdateAwardDto } from './dto/update-award.dto';
 
 @Injectable()
 export class AwardsService {

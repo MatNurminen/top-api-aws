@@ -11,7 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { AwardsService } from './awards.service';
 import { Award } from './entities/award.entity';
 import { CreateAwardDto } from './dto/create-award.dto';
-import { UpdateAwardDto } from './dto/update-award-logo.dto';
+import { UpdateAwardDto } from './dto/update-award.dto';
 
 @ApiTags('Awards')
 @Controller('awards')
