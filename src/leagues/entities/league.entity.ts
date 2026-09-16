@@ -2,6 +2,7 @@ import { Tournament } from '../../tournaments/entities/tournament.entity';
 import { LeagueLogo } from '../../league-logos/entities/league-logo.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Links } from './types';
+import { Award } from '../../awards/entities/award.entity';
 
 @Entity('leagues')
 export class League {
@@ -36,4 +37,7 @@ export class League {
 
   @OneToMany((type) => Tournament, (tournament) => tournament.league_id)
   tournament?: Tournament[];
+
+  @OneToMany((type) => Award, (award) => award.league)
+  awards?: Award[];
 }

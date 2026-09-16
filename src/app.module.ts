@@ -19,6 +19,7 @@ import { LeagueTypesModule } from './league_types/league-types.module';
 import { UploadCFModule } from './cloudflare/cloudflare.module';
 import { PlayersTournamentsModule } from './players-tournaments/players-tournaments.module';
 import { PostseasonsModule } from './postseasons/postseasons.module';
+import { AwardsModule } from './awards/awards.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PostseasonsModule } from './postseasons/postseasons.module';
     UploadCFModule,
     PlayersTournamentsModule,
     PostseasonsModule,
+    AwardsModule
   ],
   controllers: [AppController],
   providers: [AppService],
