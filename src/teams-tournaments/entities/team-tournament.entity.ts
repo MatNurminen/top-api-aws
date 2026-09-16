@@ -1,5 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Postseason } from './types';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Postseason } from '../../postseasons/entities/postseason.entity';
 
 @Entity('teams_tournaments')
 export class TeamTournament {
@@ -30,6 +36,10 @@ export class TeamTournament {
   @Column({ nullable: true })
   goals_against?: number;
 
-  @Column('jsonb', { nullable: true })
-  postseason?: Postseason | null;
+  @Column({ nullable: true })
+  postseason_id?: number;
+
+  @ManyToOne((type) => Postseason, (postseason) => postseason.teamTournaments)
+  @JoinColumn([{ name: 'postseason_id' }])
+  postseason: Postseason;
 }

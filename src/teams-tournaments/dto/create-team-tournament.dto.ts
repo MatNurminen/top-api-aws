@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsObject, IsOptional, Max, Min } from 'class-validator';
-import { Postseason } from '../entities/types';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class CreateTeamTournamentDto {
   @ApiProperty({ description: 'The id of a tournament' })
@@ -52,11 +51,4 @@ export class CreateTeamTournamentDto {
   @Min(0)
   @Max(500)
   readonly goals_against?: number;
-
-  @ApiPropertyOptional({
-    description: 'The postseason data, title, awards etc.',
-  })
-  @IsOptional()
-  @IsObject()
-  readonly postseason?: Postseason;
 }
