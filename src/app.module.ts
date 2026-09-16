@@ -20,6 +20,7 @@ import { UploadCFModule } from './cloudflare/cloudflare.module';
 import { PlayersTournamentsModule } from './players-tournaments/players-tournaments.module';
 import { PostseasonsModule } from './postseasons/postseasons.module';
 import { AwardsModule } from './awards/awards.module';
+import { PlayersTournamentsAwardsModule } from './players-tournaments-awards/players-tournaments-awards.module';
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { AwardsModule } from './awards/awards.module';
     UploadCFModule,
     PlayersTournamentsModule,
     PostseasonsModule,
-    AwardsModule
+    AwardsModule,
+    PlayersTournamentsAwardsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

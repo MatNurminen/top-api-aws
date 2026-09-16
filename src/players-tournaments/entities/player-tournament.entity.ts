@@ -1,3 +1,4 @@
+import { PlayersTournamentsAward } from '../../players-tournaments-awards/entities/players-tournaments-award.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('players_tournaments')
@@ -17,6 +18,12 @@ export class PlayerTournament {
   @Column()
   goals: number;
 
-  @Column('jsonb', { nullable: true })
-  postseason?: Record<string, any> | null;
+  @OneToMany(
+    (type) => PlayersTournamentsAward,
+    (playersTournamentsAward) => playersTournamentsAward.playerTournament,
+    {
+      cascade: true,
+    },
+  )
+  players_tournaments_awards?: PlayersTournamentsAward[];
 }
