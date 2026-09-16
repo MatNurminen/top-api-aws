@@ -24,7 +24,7 @@ export class PlayersTournamentsService {
       where: { id },
     });
     if (!playerTournament) {
-      throw new NotFoundException(`Season #${id} not found`);
+      throw new NotFoundException(`Player Tournament #${id} not found`);
     }
     return playerTournament;
   }
