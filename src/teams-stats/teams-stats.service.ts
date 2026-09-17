@@ -71,11 +71,12 @@ export class TeamsStatsService {
   async teamsForNation(params: TeamsForNationDto): Promise<TeamForNation[]> {
     const { nationId, shortName, typeId, limit } = params;
 
-    let query = `SELECT tournaments.season_id, leagues.short_name, teams_tournaments.postseason, 
-      leagues.id AS league_id, teams.id AS team_id FROM tournaments
+    let query = `SELECT tournaments.season_id, leagues.short_name, leagues.id AS league_id, 
+      teams.id AS team_id, postseason.name AS postseason FROM tournaments
       INNER JOIN leagues ON tournaments.league_id = leagues.id
       INNER JOIN teams_tournaments ON tournaments.id = teams_tournaments.tournament_id
       INNER JOIN teams ON teams_tournaments.team_id = teams.id
+      LEFT JOIN postseason ON teams_tournaments.postseason_id = postseason.id
       WHERE true
       `;
 
@@ -132,11 +133,12 @@ export class TeamsStatsService {
 
   async teamChampions(query: { leagueId: number }): Promise<TeamFact[]> {
     const teamFacts = await this.teamFactsRepository.query(
-      `SELECT season_id, team_id, full_name, postseason FROM teams_tournaments
+      `SELECT season_id, team_id, full_name, postseason.name FROM teams_tournaments
       INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
       INNER JOIN leagues ON tournaments.league_id = leagues.id
       INNER JOIN teams ON teams_tournaments.team_id = teams.id
-      WHERE league_id = $1 AND postseason->>'title' = 'Champion'
+	    INNER JOIN postseason ON teams_tournaments.postseason_id = postseason.id
+      WHERE league_id = $1 AND postseason.name = 'Champion'
       ORDER BY season_id DESC`,
       [query.leagueId],
     );

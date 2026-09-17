@@ -238,7 +238,7 @@ export class PlayersStatsService {
 
     let query = `WITH ${ctes.join(',\n')}
     SELECT players_tournaments.id, players_tournaments.teams_tournament_id, players_tournaments.player_id,
-      players_tournaments.games, players_tournaments.goals, players_tournaments.postseason, players.first_name,
+      players_tournaments.games, players_tournaments.goals, players.first_name,
       players.last_name, players.jersey_number, players.player_position, players.player_order,
       players.nation_id, players.birth_year, players.height, players.weight, players.draft_team_id,
       tournaments.season_id, tournaments.league_id, teams_tournaments.team_id,

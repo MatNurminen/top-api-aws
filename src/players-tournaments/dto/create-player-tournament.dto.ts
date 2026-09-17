@@ -23,11 +23,4 @@ export class CreatePlayerTournamentDto {
   @Min(0)
   @Max(250)
   readonly goals?: number;
-
-  @ApiPropertyOptional({
-    description: 'The postseason data, title, awards etc.',
-  })
-  @IsOptional()
-  @IsObject()
-  readonly postseason?: Record<string, any>;
 }
