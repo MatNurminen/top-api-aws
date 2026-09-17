@@ -53,5 +53,8 @@ export class Standing {
   logo: string;
 
   @Column()
-  postseason?: Record<string, any> | null;
+  postseason_id?: number;
+
+  @Column()
+  postseason?: string;
 }

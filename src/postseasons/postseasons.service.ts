@@ -13,6 +13,9 @@ export class PostseasonsService {
   findAll(): Promise<Postseason[]> {
     return this.postseasonRepository.find({
       relations: ['teamTournaments'],
+      order: {
+        name: 'ASC',
+      },
     });
   }
 }

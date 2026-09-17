@@ -27,12 +27,14 @@ export class TeamsStatsService {
 
     let query = `SELECT teams_tournaments.*, teams_tournaments.goals_for - teams_tournaments.goals_against as gd, 
       teams_tournaments.wins * 2 + teams_tournaments.ties as pts, teams.full_name, team_logos.logo, tournaments.season_id, 
-      leagues.name, leagues.id AS league_id, seasons.name AS season FROM teams_tournaments 
+      leagues.name, leagues.id AS league_id, seasons.name AS season, 
+      postseason.id AS postseason_id, postseason.name AS postseason FROM teams_tournaments
       INNER JOIN teams ON teams_tournaments.team_id = teams.id
       INNER JOIN team_logos ON teams.id = team_logos.team_id
       INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
       INNER JOIN leagues ON tournaments.league_id = leagues.id
       INNER JOIN seasons ON tournaments.season_id = seasons.id
+      LEFT JOIN postseason ON teams_tournaments.postseason_id = postseason.id
       WHERE team_logos.start_year <= tournaments.season_id 
 	    AND (team_logos.end_year >= tournaments.season_id 
 	    OR team_logos.end_year IS NULL)
