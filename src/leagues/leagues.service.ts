@@ -57,8 +57,10 @@ export class LeaguesService {
     const league = await this.leagueRepository
       .createQueryBuilder('league')
       .leftJoinAndSelect('league.logos', 'logos')
+      .leftJoinAndSelect('league.awards', 'awards')
       .where('league.id = :id', { id: id })
       .orderBy('logos.start_year', 'ASC')
+      .orderBy('awards.name', 'ASC')
       .getOne();
     if (!league) {
       throw new NotFoundException(`League #${id} not found`);

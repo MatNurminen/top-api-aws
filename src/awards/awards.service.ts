@@ -30,6 +30,13 @@ export class AwardsService {
     return award;
   }
 
+  async findAwardsByLeague(league_id: number): Promise<Award[]> {
+    return this.awardRepository.find({
+      where: { league_id },
+      order: { name: 'ASC' },
+    });
+  }
+
   async create(createAwardDto: CreateAwardDto): Promise<Award> {
     const { league_id } = createAwardDto;
 

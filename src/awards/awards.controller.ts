@@ -28,6 +28,11 @@ export class AwardsController {
     return this.awardsService.findOne(id);
   }
 
+  @Get('league/:leagueId')
+  findByLeague(@Param('leagueId') leagueId: number): Promise<Award[]> {
+    return this.awardsService.findAwardsByLeague(leagueId);
+  }
+
   @Post()
   create(@Body() createAwardDto: CreateAwardDto): Promise<Award> {
     return this.awardsService.create(createAwardDto);
