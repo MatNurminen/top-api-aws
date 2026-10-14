@@ -1,3 +1,5 @@
+import { Award } from "src/awards/entities/award.entity";
+
 export class PlayerStatTotal {
   player_id: number;
   first_name: string;
@@ -23,7 +25,6 @@ export class PlayerStatDetail {
   player_id: number;
   games: number;
   goals: number;
-  postseason: string;
   first_name: string;
   last_name: string;
   jersey_number: number;
@@ -49,6 +50,7 @@ export class PlayerStatDetail {
   club_name: string;
   league_name: string;
   total: number;
+  awards: Award[];
 }
 
 export class CountPlayerByNation {

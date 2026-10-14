@@ -179,7 +179,10 @@ export class PlayersStatsService {
       paramIndex++;
     }
 
-    const result = await this.playerStatTotalRepository.query(query, queryParams);
+    const result = await this.playerStatTotalRepository.query(
+      query,
+      queryParams,
+    );
     return new PaginatedResponseDto(
       result,
       Number(result[0]?.total ?? 0),
@@ -237,27 +240,39 @@ export class PlayersStatsService {
     ctes.push(playerClubCte);
 
     let query = `WITH ${ctes.join(',\n')}
-    SELECT players_tournaments.id, players_tournaments.teams_tournament_id, players_tournaments.player_id,
+      SELECT players_tournaments.id, players_tournaments.teams_tournament_id, players_tournaments.player_id,
       players_tournaments.games, players_tournaments.goals, players.first_name,
       players.last_name, players.jersey_number, players.player_position, players.player_order,
       players.nation_id, players.birth_year, players.height, players.weight, players.draft_team_id,
       tournaments.season_id, tournaments.league_id, teams_tournaments.team_id,
-      teams.full_name,
+      teams.full_name, 
       leagues.short_name, seasons.name, nations_player.flag AS player_flag, nations_player.name AS player_nation,
       nations_team.flag AS team_flag, leagues.type_id, 
       player_club.club_name, player_club.league_name,
+      COALESCE(pta_agg.awards, '[]'::json) AS awards,
       COUNT(*) OVER()::int as total
-    FROM players_tournaments
-    INNER JOIN players ON players_tournaments.player_id = players.id
-    INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
-    INNER JOIN teams ON teams_tournaments.team_id = teams.id
-    INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
-    INNER JOIN leagues ON tournaments.league_id = leagues.id
-    INNER JOIN seasons ON tournaments.season_id = seasons.id
-    INNER JOIN nations AS nations_player ON players.nation_id = nations_player.id
-    INNER JOIN nations AS nations_team ON teams.nation_id = nations_team.id
-    LEFT JOIN player_club ON player_club.player_id = players_tournaments.player_id
-    WHERE true
+      FROM players_tournaments
+      INNER JOIN players ON players_tournaments.player_id = players.id
+      INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
+      INNER JOIN teams ON teams_tournaments.team_id = teams.id
+      INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
+      INNER JOIN leagues ON tournaments.league_id = leagues.id
+      INNER JOIN seasons ON tournaments.season_id = seasons.id
+      INNER JOIN nations AS nations_player ON players.nation_id = nations_player.id
+      INNER JOIN nations AS nations_team ON teams.nation_id = nations_team.id
+      LEFT JOIN (
+        SELECT
+          pta.players_tournament_id,
+          json_agg(
+            json_build_object('id', a.id, 'league_id', a.league_id, 'name', a.name)
+            ORDER BY a.name
+          ) AS awards
+        FROM players_tournaments_awards pta
+        INNER JOIN awards a ON a.id = pta.award_id
+        GROUP BY pta.players_tournament_id
+      ) AS pta_agg ON pta_agg.players_tournament_id = players_tournaments.id
+      LEFT JOIN player_club ON player_club.player_id = players_tournaments.player_id
+      WHERE true
     `;
 
     if (leagueId && leagueId.length > 0) {
