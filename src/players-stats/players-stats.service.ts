@@ -264,7 +264,7 @@ export class PlayersStatsService {
         SELECT
           pta.players_tournament_id,
           json_agg(
-            json_build_object('id', a.id, 'league_id', a.league_id, 'name', a.name)
+            json_build_object('id', pta.id, 'award_id', a.id, 'name', a.name)
             ORDER BY a.name
           ) AS awards
         FROM players_tournaments_awards pta

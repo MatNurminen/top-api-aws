@@ -1,4 +1,10 @@
-import { Award } from "src/awards/entities/award.entity";
+import { Award } from 'src/awards/entities/award.entity';
+
+class PlayerAwardDto {
+  id: number;
+  award_id: number;
+  name: string;
+}
 
 export class PlayerStatTotal {
   player_id: number;
@@ -50,7 +56,7 @@ export class PlayerStatDetail {
   club_name: string;
   league_name: string;
   total: number;
-  awards: Award[];
+  awards: PlayerAwardDto[];
 }
 
 export class CountPlayerByNation {
