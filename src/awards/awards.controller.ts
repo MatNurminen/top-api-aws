@@ -13,7 +13,12 @@ import { AwardsService } from './awards.service';
 import { Award } from './entities/award.entity';
 import { CreateAwardDto } from './dto/create-award.dto';
 import { UpdateAwardDto } from './dto/update-award.dto';
-import { AwardStatsDetails, AwardStatsTotals } from './entities/awardStats.entity';
+import {
+  AwardStatsDetails,
+  AwardStatsTotals,
+} from './entities/awardStats.entity';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { AwardsStatsParamsDto } from './params-dto/awards-stats.dto';
 
 @ApiTags('Awards')
 @Controller('awards')
@@ -27,18 +32,16 @@ export class AwardsController {
 
   @Get('detail')
   getAwardsStatsDetails(
-    @Query('leagueId') leagueId: number,
-    @Query('awardId') awardId: number,
-  ): Promise<AwardStatsDetails[]> {
-    return this.awardsService.awardsStatsDetails({ leagueId, awardId });
+    @Query() query: AwardsStatsParamsDto,
+  ): Promise<PaginatedResponseDto<AwardStatsDetails>> {
+    return this.awardsService.awardsStatsDetails(query);
   }
 
   @Get('total')
   getAwardsStatsTotals(
-    @Query('leagueId') leagueId: number,
-    @Query('awardId') awardId: number,
-  ): Promise<AwardStatsTotals[]> {
-    return this.awardsService.awardsStatsTotals({ leagueId, awardId });
+    @Query() query: AwardsStatsParamsDto,
+  ): Promise<PaginatedResponseDto<AwardStatsTotals>> {
+    return this.awardsService.awardsStatsTotals(query);
   }
 
   @Get(':id')

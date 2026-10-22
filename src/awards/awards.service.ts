@@ -10,6 +10,8 @@ import {
   AwardStatsDetails,
   AwardStatsTotals,
 } from './entities/awardStats.entity';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { AwardsStatsParamsDto } from './params-dto/awards-stats.dto';
 
 @Injectable()
 export class AwardsService {
@@ -45,13 +47,14 @@ export class AwardsService {
     });
   }
 
-  async awardsStatsDetails(query: {
-    leagueId: number;
-    awardId: number;
-  }): Promise<AwardStatsDetails[]> {
-    const awardsStatsDetails = await this.awardStatsDetailsRepository.query(
-      `SELECT awards.id, awards.name, players.id AS player_id, players.first_name, players.last_name, players.birth_year,
-        players.player_position, nations.flag, tournaments.season_id, teams.full_name, teams.id AS team_id
+  async awardsStatsDetails(
+    params: AwardsStatsParamsDto,
+  ): Promise<PaginatedResponseDto<AwardStatsDetails>> {
+    const { leagueId, awardId, limit, offset } = params;
+
+    let query = `SELECT awards.id, awards.name, players.id AS player_id, players.first_name, players.last_name, players.birth_year,
+        players.player_position, nations.flag, tournaments.season_id, teams.full_name, teams.id AS team_id,
+        COUNT(*) OVER() AS total
         FROM players_tournaments_awards
         INNER JOIN awards ON players_tournaments_awards.award_id = awards.id
         INNER JOIN players_tournaments ON players_tournaments_awards.players_tournament_id = players_tournaments.id
@@ -61,20 +64,42 @@ export class AwardsService {
         INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
         INNER JOIN teams ON teams_tournaments.team_id = teams.id
         WHERE awards.league_id = $1 AND awards.id = $2
-        ORDER BY season_id DESC, players.player_order, players.last_name`,
-      [query.leagueId, query.awardId],
+        ORDER BY season_id DESC, players.player_order, players.last_name`;
+
+    const queryParams: number[] = [leagueId, awardId];
+    let paramIndex = 3;
+
+    if (limit) {
+      query += ` LIMIT $${paramIndex}`;
+      queryParams.push(Number(limit));
+      paramIndex++;
+    }
+    if (offset) {
+      query += ` OFFSET $${paramIndex}`;
+      queryParams.push(Number(offset));
+    }
+
+    const awardsStatsDetails = await this.awardStatsDetailsRepository.query(
+      query,
+      queryParams,
     );
-    return awardsStatsDetails;
+    return new PaginatedResponseDto(
+      awardsStatsDetails,
+      Number(awardsStatsDetails[0]?.total ?? 0),
+      limit,
+      offset,
+    );
   }
 
-  async awardsStatsTotals(query: {
-    leagueId: number;
-    awardId: number;
-  }): Promise<AwardStatsTotals[]> {
-    const awardsStatsDetails = await this.awardStatsTotalsRepository.query(
-      `SELECT awards.id, awards.name, players.id AS player_id, players.first_name, players.last_name, players.birth_year,
+  async awardsStatsTotals(
+    params: AwardsStatsParamsDto,
+  ): Promise<PaginatedResponseDto<AwardStatsTotals>> {
+    const { leagueId, awardId, limit, offset } = params;
+
+    let query = `SELECT awards.id, awards.name, players.id AS player_id, players.first_name, players.last_name, players.birth_year,
         players.player_position, nations.flag,
-		    COUNT(awards.id) as awards 
+		    COUNT(awards.id) as awards,
+        COUNT(*) OVER() AS total
         FROM players_tournaments_awards
         INNER JOIN awards ON players_tournaments_awards.award_id = awards.id
         INNER JOIN players_tournaments ON players_tournaments_awards.players_tournament_id = players_tournaments.id
@@ -83,10 +108,31 @@ export class AwardsService {
         WHERE awards.league_id = $1 AND awards.id = $2
 		    GROUP BY (awards.id, awards.name, players.id, players.first_name, players.last_name, players.birth_year, 
         players.player_position, nations.flag)
-        ORDER BY awards DESC, players.last_name`,
-      [query.leagueId, query.awardId],
+        ORDER BY awards DESC, players.last_name`;
+
+    const queryParams: number[] = [leagueId, awardId];
+    let paramIndex = 3;
+
+    if (limit) {
+      query += ` LIMIT $${paramIndex}`;
+      queryParams.push(Number(limit));
+      paramIndex++;
+    }
+    if (offset) {
+      query += ` OFFSET $${paramIndex}`;
+      queryParams.push(Number(offset));
+    }
+
+    const awardsStatsTotals = await this.awardStatsTotalsRepository.query(
+      query,
+      queryParams,
     );
-    return awardsStatsDetails;
+    return new PaginatedResponseDto(
+      awardsStatsTotals,
+      Number(awardsStatsTotals[0]?.total ?? 0),
+      limit,
+      offset,
+    );
   }
 
   async create(createAwardDto: CreateAwardDto): Promise<Award> {
