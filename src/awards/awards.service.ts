@@ -50,12 +50,13 @@ export class AwardsService {
     awardId: number;
   }): Promise<AwardStatsDetails[]> {
     const awardsStatsDetails = await this.awardStatsDetailsRepository.query(
-      `SELECT awards.id, awards.name, players.first_name, players.last_name, players.birth_year,
-        players.player_position, tournaments.season_id, teams.full_name, teams.id AS team_id
+      `SELECT awards.id, awards.name, players.id AS player_id, players.first_name, players.last_name, players.birth_year,
+        players.player_position, nations.flag, tournaments.season_id, teams.full_name, teams.id AS team_id
         FROM players_tournaments_awards
         INNER JOIN awards ON players_tournaments_awards.award_id = awards.id
         INNER JOIN players_tournaments ON players_tournaments_awards.players_tournament_id = players_tournaments.id
         INNER JOIN players ON players_tournaments.player_id = players.id
+		    INNER JOIN nations ON players.nation_id = nations.id
         INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
         INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
         INNER JOIN teams ON teams_tournaments.team_id = teams.id
@@ -71,16 +72,18 @@ export class AwardsService {
     awardId: number;
   }): Promise<AwardStatsTotals[]> {
     const awardsStatsDetails = await this.awardStatsTotalsRepository.query(
-      `SELECT awards.id, awards.name, players.first_name, players.last_name, players.birth_year,
-        players.player_position,
+      `SELECT awards.id, awards.name, players.id AS player_id, players.first_name, players.last_name, players.birth_year,
+        players.player_position, nations.flag,
 		    COUNT(awards.id) as awards 
         FROM players_tournaments_awards
         INNER JOIN awards ON players_tournaments_awards.award_id = awards.id
         INNER JOIN players_tournaments ON players_tournaments_awards.players_tournament_id = players_tournaments.id
         INNER JOIN players ON players_tournaments.player_id = players.id
+		    INNER JOIN nations ON players.nation_id = nations.id
         WHERE awards.league_id = $1 AND awards.id = $2
-		    GROUP BY (awards.id, awards.name, players.first_name, players.last_name, players.birth_year, players.player_position)
-        ORDER BY awards, players.last_name`,
+		    GROUP BY (awards.id, awards.name, players.id, players.first_name, players.last_name, players.birth_year, 
+        players.player_position, nations.flag)
+        ORDER BY awards DESC, players.last_name`,
       [query.leagueId, query.awardId],
     );
     return awardsStatsDetails;

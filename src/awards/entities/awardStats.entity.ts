@@ -8,6 +8,9 @@ abstract class AwardStats {
   name: string;
 
   @Column()
+  player_id: string;
+
+  @Column()
   fist_name: string;
 
   @Column()
@@ -18,6 +21,9 @@ abstract class AwardStats {
 
   @Column()
   player_position: string;
+
+  @Column()
+  flag: string;
 }
 
 export class AwardStatsTotals extends AwardStats {
@@ -27,11 +33,8 @@ export class AwardStatsTotals extends AwardStats {
 
 export class AwardStatsDetails extends AwardStats {
   @Column()
-  total_awards: number;
+  full_name: string;
 
   @Column()
-  first_award_year: number;
-
-  @Column()
-  last_award_year: number;
+  team_id: number;
 }
