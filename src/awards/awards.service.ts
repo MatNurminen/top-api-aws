@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Award } from './entities/award.entity';
 import { CreateAwardDto } from './dto/create-award.dto';
 import { League } from '../leagues/entities/league.entity';
 import { validateEntityExists } from '../common/utils/entity-validator.util';
 import { UpdateAwardDto } from './dto/update-award.dto';
 import {
+  AwardByPlayer,
   AwardStatsDetails,
   AwardStatsTotals,
 } from './entities/awardStats.entity';
@@ -18,12 +19,9 @@ export class AwardsService {
   constructor(
     @InjectRepository(Award)
     private readonly awardRepository: Repository<Award>,
+    private readonly dataSource: DataSource,
     @InjectRepository(League)
     private readonly leagueRepository: Repository<League>,
-    @InjectRepository(AwardStatsDetails)
-    private readonly awardStatsDetailsRepository: Repository<AwardStatsDetails>,
-    @InjectRepository(AwardStatsTotals)
-    private readonly awardStatsTotalsRepository: Repository<AwardStatsTotals>,
   ) {}
 
   findAll(): Promise<Award[]> {
@@ -63,7 +61,7 @@ export class AwardsService {
         INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
         INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
         INNER JOIN teams ON teams_tournaments.team_id = teams.id
-        WHERE awards.league_id = $1 AND awards.id = $2
+        WHERE awards.league_id =$1 AND awards.id = $2
         ORDER BY season_id DESC, players.player_order, players.last_name`;
 
     const queryParams: number[] = [leagueId, awardId];
@@ -79,16 +77,12 @@ export class AwardsService {
       queryParams.push(Number(offset));
     }
 
-    const awardsStatsDetails = await this.awardStatsDetailsRepository.query(
-      query,
-      queryParams,
-    );
-    return new PaginatedResponseDto(
-      awardsStatsDetails,
-      Number(awardsStatsDetails[0]?.total ?? 0),
-      limit,
-      offset,
-    );
+    const awardsStatsDetails: (AwardStatsDetails & { total: string })[] =
+      await this.dataSource.query(query, queryParams);
+
+    const total = Number(awardsStatsDetails[0]?.total ?? 0);
+
+    return new PaginatedResponseDto(awardsStatsDetails, total, limit, offset);
   }
 
   async awardsStatsTotals(
@@ -123,15 +117,27 @@ export class AwardsService {
       queryParams.push(Number(offset));
     }
 
-    const awardsStatsTotals = await this.awardStatsTotalsRepository.query(
-      query,
-      queryParams,
-    );
-    return new PaginatedResponseDto(
-      awardsStatsTotals,
-      Number(awardsStatsTotals[0]?.total ?? 0),
-      limit,
-      offset,
+    const awardsStatsTotals: (AwardStatsTotals & { total: string })[] =
+      await this.dataSource.query(query, queryParams);
+
+    const total = Number(awardsStatsTotals[0]?.total ?? 0);
+
+    return new PaginatedResponseDto(awardsStatsTotals, total, limit, offset);
+  }
+
+async awardsByPlayer(query: { playerId: number }): Promise<AwardByPlayer[]> {
+    return this.dataSource.query(
+      `SELECT awards.id, awards.name, tournaments.season_id, leagues.short_name,
+        awards.league_id
+        FROM players_tournaments_awards
+        INNER JOIN awards ON players_tournaments_awards.award_id = awards.id
+        INNER JOIN players_tournaments ON players_tournaments_awards.players_tournament_id = players_tournaments.id
+        INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
+        INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
+		    INNER JOIN leagues ON awards.league_id = leagues.id
+        WHERE players_tournaments.player_id = $1
+        ORDER BY season_id DESC, awards.name`,
+      [query.playerId],
     );
   }
 

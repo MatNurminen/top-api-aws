@@ -14,6 +14,7 @@ import { Award } from './entities/award.entity';
 import { CreateAwardDto } from './dto/create-award.dto';
 import { UpdateAwardDto } from './dto/update-award.dto';
 import {
+  AwardByPlayer,
   AwardStatsDetails,
   AwardStatsTotals,
 } from './entities/awardStats.entity';
@@ -42,6 +43,13 @@ export class AwardsController {
     @Query() query: AwardsStatsParamsDto,
   ): Promise<PaginatedResponseDto<AwardStatsTotals>> {
     return this.awardsService.awardsStatsTotals(query);
+  }
+
+  @Get('player')
+  getAwardsByPlayer(
+    @Query('playerId') playerId: number,
+  ): Promise<AwardByPlayer[]> {
+    return this.awardsService.awardsByPlayer({ playerId });
   }
 
   @Get(':id')

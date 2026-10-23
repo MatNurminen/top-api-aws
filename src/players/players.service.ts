@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Player } from './entities/player.entity';
-import { ILike, Repository } from 'typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 import { CreatePlayerDto } from './dto/create-player.dto';
 import { UpdatePlayerDto } from './dto/update-player.dto';
 import { FreeAgent } from './entities/free-agent.entity';
@@ -17,8 +17,9 @@ export class PlayersService {
   constructor(
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
-    @InjectRepository(FreeAgent)
-    private readonly freeAgentRepository: Repository<FreeAgent>,
+    private readonly dataSource: DataSource,
+    // @InjectRepository(FreeAgent)
+    // private readonly freeAgentRepository: Repository<FreeAgent>,
     @InjectRepository(DraftNation)
     private readonly draftNationRepository: Repository<DraftNation>,
     @InjectRepository(DraftTeam)
@@ -89,7 +90,7 @@ export class PlayersService {
     seasonId: number;
     nationId: number;
   }): Promise<FreeAgent[]> {
-    const freeAgents = await this.freeAgentRepository.query(
+    return this.dataSource.query(
       `SELECT players_tournaments.id AS pt_id, players.*, nations.flag
         FROM players_tournaments
         INNER JOIN teams_tournaments ON players_tournaments.teams_tournament_id = teams_tournaments.id
@@ -101,7 +102,6 @@ export class PlayersService {
         AND nation_id = $2`,
       [query.seasonId, query.nationId],
     );
-    return freeAgents;
   }
 
   async draftNations(): Promise<DraftNation[]> {
