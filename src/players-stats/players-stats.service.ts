@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { DataSource } from 'typeorm';
 import {
   CountPlayerByNation,
   PlayerStatDetail,
@@ -8,7 +8,6 @@ import {
   PlayerStatTotalByClub,
 } from './entities/players-stats.entity';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { PlayersStatsTotalParamsDto } from './params-dto/players-stats-total.dto';
 import { PlayersStatsDetailParamsDto } from './params-dto/players-stats-detail.dto';
 import { CountPlayersByNationParamsDto } from './params-dto/count-players-by-nation.dto';
@@ -16,18 +15,7 @@ import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 
 @Injectable()
 export class PlayersStatsService {
-  constructor(
-    @InjectRepository(PlayerStatTotal)
-    private readonly playerStatTotalRepository: Repository<PlayerStatTotal>,
-    @InjectRepository(PlayerStatDetail)
-    private readonly playerStatDetailRepository: Repository<PlayerStatDetail>,
-    @InjectRepository(CountPlayerByNation)
-    private readonly countPlayerByNationRepository: Repository<CountPlayerByNation>,
-    @InjectRepository(PlayerStatLeague)
-    private readonly playerStatLeagueRepository: Repository<PlayerStatLeague>,
-    @InjectRepository(PlayerStatTeam)
-    private readonly playerStatTeamRepository: Repository<PlayerStatTeam>,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   async playersStatsTotal(
     params: PlayersStatsTotalParamsDto,
@@ -48,7 +36,7 @@ export class PlayersStatsService {
       WHERE true
     `;
 
-    const queryParams: any[] = [];
+    const queryParams: number[] = [];
     let paramIndex = 1;
 
     if (leagueId) {
@@ -96,10 +84,7 @@ export class PlayersStatsService {
       paramIndex++;
     }
 
-    const result = await this.playerStatTotalRepository.query(
-      query,
-      queryParams,
-    );
+    const result = await this.dataSource.query(query, queryParams);
     return new PaginatedResponseDto(
       result,
       Number(result[0]?.total ?? 0),
@@ -129,7 +114,7 @@ export class PlayersStatsService {
       WHERE true
     `;
 
-    const queryParams: any[] = [];
+    const queryParams: number[] = [];
     let paramIndex = 1;
 
     if (leagueId) {
@@ -175,14 +160,11 @@ export class PlayersStatsService {
     }
     if (offset) {
       query += ` OFFSET $${paramIndex}`;
-      queryParams.push(Number(offset));
+      queryParams.push(offset);
       paramIndex++;
     }
 
-    const result = await this.playerStatTotalRepository.query(
-      query,
-      queryParams,
-    );
+    const result = await this.dataSource.query(query, queryParams);
     return new PaginatedResponseDto(
       result,
       Number(result[0]?.total ?? 0),
@@ -207,7 +189,7 @@ export class PlayersStatsService {
       playerOrd,
     } = params;
 
-    const queryParams: any[] = [];
+    const queryParams: number[] = [];
     let paramIndex = 1;
     const ctes: string[] = [];
 
@@ -215,7 +197,7 @@ export class PlayersStatsService {
       ctes.push(
         `current_season AS (SELECT $${paramIndex}::integer AS season_id)`,
       );
-      queryParams.push(Number(seasonId));
+      queryParams.push(seasonId);
       paramIndex++;
     }
 
@@ -278,18 +260,18 @@ export class PlayersStatsService {
     if (leagueId && leagueId.length > 0) {
       const placeholders = leagueId.map(() => `$${paramIndex++}`).join(', ');
       query += ` AND leagues.id IN (${placeholders})`;
-      queryParams.push(...leagueId.map((id) => Number(id)));
+      queryParams.push(...leagueId.map((id) => id));
     }
     if (excludeLeagueId && excludeLeagueId.length > 0) {
       const placeholders = excludeLeagueId
         .map(() => `$${paramIndex++}`)
         .join(', ');
       query += ` AND leagues.id NOT IN (${placeholders})`;
-      queryParams.push(...excludeLeagueId.map((id) => Number(id)));
+      queryParams.push(...excludeLeagueId.map((id) => id));
     }
     if (teamId) {
       query += ` AND teams_tournaments.team_id = $${paramIndex}`;
-      queryParams.push(Number(teamId));
+      queryParams.push(teamId);
       paramIndex++;
     }
     if (seasonId) {
@@ -297,43 +279,40 @@ export class PlayersStatsService {
     }
     if (nationId) {
       query += ` AND players.nation_id = $${paramIndex}`;
-      queryParams.push(Number(nationId));
+      queryParams.push(nationId);
       paramIndex++;
     }
     if (playerId) {
       query += ` AND players_tournaments.player_id = $${paramIndex}`;
-      queryParams.push(Number(playerId));
+      queryParams.push(playerId);
       paramIndex++;
     }
     if (typeId) {
       query += ` AND leagues.type_id = $${paramIndex}`;
-      queryParams.push(Number(typeId));
+      queryParams.push(typeId);
       paramIndex++;
     }
     if (playerOrd && playerOrd.length > 0) {
       const placeholders = playerOrd.map(() => `$${paramIndex++}`).join(', ');
       query += ` AND players.player_order IN (${placeholders})`;
-      queryParams.push(...playerOrd.map((ord) => Number(ord)));
+      queryParams.push(...playerOrd.map((ord) => ord));
     }
 
     query += ` ORDER BY players_tournaments.goals DESC, last_name, first_name`;
 
     if (limit) {
       query += ` LIMIT $${paramIndex}`;
-      queryParams.push(Number(limit));
+      queryParams.push(limit);
       paramIndex++;
     }
     if (offset) {
       query += ` OFFSET $${paramIndex}`;
-      queryParams.push(Number(offset));
+      queryParams.push(offset);
       paramIndex++;
     }
 
     try {
-      const result = await this.playerStatDetailRepository.query(
-        query,
-        queryParams,
-      );
+      const result = await this.dataSource.query(query, queryParams);
       return new PaginatedResponseDto(
         result,
         Number(result[0]?.total ?? 0),
@@ -362,7 +341,7 @@ export class PlayersStatsService {
       WHERE true
     `;
 
-    const queryParams: any[] = [];
+    const queryParams: number[] = [];
     let paramIndex = 1;
 
     if (leagueId) {
@@ -391,13 +370,13 @@ export class PlayersStatsService {
       ORDER BY count DESC
     `;
 
-    return await this.countPlayerByNationRepository.query(query, queryParams);
+    return this.dataSource.query(query, queryParams);
   }
 
   async playersStatsLeagues(query: {
     playerId: number;
   }): Promise<PlayerStatLeague[]> {
-    const playersStatsLeagues = await this.playerStatLeagueRepository.query(
+    return this.dataSource.query(
       `SELECT tournaments.league_id, leagues.short_name, league_logos.logo,
       SUM(players_tournaments.games) as games_t, SUM(players_tournaments.goals) as goals_t,
       COUNT(tournaments.season_id) as years  FROM players_tournaments
@@ -411,13 +390,12 @@ export class PlayersStatsService {
       ORDER BY years DESC`,
       [query.playerId],
     );
-    return playersStatsLeagues;
   }
 
   async playersStatsTeams(query: {
     playerId: number;
   }): Promise<PlayerStatTeam[]> {
-    const playersStatsTeams = await this.playerStatTeamRepository.query(
+    return this.dataSource.query(
       `SELECT teams_tournaments.team_id, teams.full_name, nations.flag, nations.id as nation_id, nations.name as player_nation,
       SUM(players_tournaments.games) as games_t, SUM(players_tournaments.goals) as goals_t,
       COUNT(tournaments.season_id) as years FROM players_tournaments
@@ -431,6 +409,5 @@ export class PlayersStatsService {
       ORDER BY years DESC`,
       [query.playerId],
     );
-    return playersStatsTeams;
   }
 }

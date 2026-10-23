@@ -1,5 +1,3 @@
-import { Award } from 'src/awards/entities/award.entity';
-
 class PlayerAwardDto {
   id: number;
   award_id: number;
