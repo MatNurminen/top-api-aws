@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { League } from './entities/league.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Not, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 import { CreateLeagueDto } from './dto/create-league.dto';
 import { UpdateLeagueDto } from './dto/update-league.dto';
 import { LeagueLogo } from '../league-logos/entities/league-logo.entity';
@@ -18,8 +18,7 @@ export class LeaguesService {
     private readonly leagueRepository: Repository<League>,
     @InjectRepository(LeagueLogo)
     private leagueLogoRepository: Repository<LeagueLogo>,
-    @InjectRepository(LeagueByNation)
-    private leagueByNationRepository: Repository<LeagueByNation>,
+    private readonly dataSource: DataSource,
   ) {}
 
   findAll(): Promise<League[]> {
@@ -39,7 +38,7 @@ export class LeaguesService {
   async leaguesByNation(query: {
     nationId: number;
   }): Promise<LeagueByNation[]> {
-    const leaguesByNation = await this.leagueByNationRepository.query(
+    return this.dataSource.query(
       `SELECT DISTINCT ON (leagues.short_name) leagues.id, leagues.short_name, 
       nations.flag FROM tournaments
       INNER JOIN leagues ON tournaments.league_id = leagues.id
@@ -50,7 +49,6 @@ export class LeaguesService {
       ORDER BY leagues.short_name`,
       [query.nationId],
     );
-    return leaguesByNation;
   }
 
   async findOne(id: number): Promise<League> {

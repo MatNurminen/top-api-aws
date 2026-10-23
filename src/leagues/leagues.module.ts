@@ -4,10 +4,9 @@ import { LeaguesService } from './leagues.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { League } from './entities/league.entity';
 import { LeagueLogo } from '../league-logos/entities/league-logo.entity';
-import { LeagueByNation } from './entities/leagueByNation.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([League, LeagueLogo, LeagueByNation])],
+  imports: [TypeOrmModule.forFeature([League, LeagueLogo])],
   controllers: [LeaguesController],
   providers: [LeaguesService],
 })
