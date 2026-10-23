@@ -18,14 +18,6 @@ export class PlayersService {
     @InjectRepository(Player)
     private readonly playerRepository: Repository<Player>,
     private readonly dataSource: DataSource,
-    // @InjectRepository(FreeAgent)
-    // private readonly freeAgentRepository: Repository<FreeAgent>,
-    @InjectRepository(DraftNation)
-    private readonly draftNationRepository: Repository<DraftNation>,
-    @InjectRepository(DraftTeam)
-    private readonly draftTeamRepository: Repository<DraftTeam>,
-    @InjectRepository(DraftDetail)
-    private readonly draftDetailRepository: Repository<DraftDetail>,
   ) {}
 
   async findAll(filter?: string): Promise<Player[]> {
@@ -105,18 +97,17 @@ export class PlayersService {
   }
 
   async draftNations(): Promise<DraftNation[]> {
-    const draftNations = await this.draftNationRepository.query(
+    return this.dataSource.query(
       `SELECT nations.id, nations.name, nations.flag, COUNT(players.id) as plrs 
         FROM players INNER JOIN teams ON players.draft_team_id = teams.id 
         INNER JOIN nations ON players.nation_id = nations.id 
         GROUP BY (nations.id, nations.name, nations.flag) 
         ORDER BY nations.name`,
     );
-    return draftNations;
   }
 
   async draftTeams(): Promise<DraftTeam[]> {
-    const draftTeams = await this.draftTeamRepository.query(
+    return this.dataSource.query(
       `SELECT teams.id, teams.full_name, team_logos.logo, 
         COUNT(players.id) as plrs FROM players
         INNER JOIN teams ON players.draft_team_id = teams.id
@@ -125,7 +116,6 @@ export class PlayersService {
         GROUP BY (teams.id, teams.full_name, team_logos.logo)
         ORDER BY teams.full_name`,
     );
-    return draftTeams;
   }
 
   async draftDetails(params: DraftDetailParamsDto): Promise<DraftDetail[]> {
@@ -165,7 +155,7 @@ export class PlayersService {
       players.draft_team_id, teams.full_name, nations.name, nations.flag
       ORDER BY players.last_name`;
 
-    return await this.draftDetailRepository.query(query, queryParams);
+    return this.dataSource.query(query, queryParams);
   }
 
   create(createPlayerDto: CreatePlayerDto): Promise<Player> {
