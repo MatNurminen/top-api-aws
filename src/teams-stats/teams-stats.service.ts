@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Standing } from './entities/standing.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { TeamForNation } from './entities/teamsForNation.entity';
 import { TeamsForNationDto } from './params-dto/teams-for-nation.dto';
 import { TeamFact } from './entities/teamsFacts';
@@ -13,14 +9,7 @@ import { TeamsStandingDto } from './params-dto/teams-standing.dto';
 
 @Injectable()
 export class TeamsStatsService {
-  constructor(
-    @InjectRepository(Standing)
-    private readonly teamStatsRepository: Repository<Standing>,
-    @InjectRepository(TeamForNation)
-    private readonly teamForNationRepository: Repository<TeamForNation>,
-    @InjectRepository(TeamFact)
-    private readonly teamFactsRepository: Repository<TeamFact>,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
   async standings(params: TeamsStandingDto): Promise<Standing[]> {
     const { seasonId, leagueId, teamId, typeId } = params;
@@ -65,7 +54,7 @@ export class TeamsStatsService {
 
     query += ` ORDER BY pts DESC, full_name`;
 
-    return await this.teamStatsRepository.query(query, queryParams);
+    return this.dataSource.query(query, queryParams);
   }
 
   async teamsForNation(params: TeamsForNationDto): Promise<TeamForNation[]> {
@@ -103,14 +92,14 @@ export class TeamsStatsService {
       queryParams.push(limit);
     }
 
-    return await this.teamForNationRepository.query(query, queryParams);
+    return this.dataSource.query(query, queryParams);
   }
 
   async teamFacts(query: {
     leagueId: number;
     seasonId: number;
   }): Promise<TeamFact[]> {
-    const teamFacts = await this.teamFactsRepository.query(
+    return this.dataSource.query(
       `SELECT teams.id as team_id, teams.full_name, team_logos.logo, COUNT(players.id) as plrs,
       ROUND(AVG(players.height), 2) as avheight, 
       ROUND(AVG(players.weight), 2) as avweight,
@@ -128,11 +117,10 @@ export class TeamsStatsService {
       GROUP BY teams.id, teams.full_name, team_logos.logo ORDER BY teams.full_name`,
       [query.leagueId, query.seasonId],
     );
-    return teamFacts;
   }
 
   async teamChampions(query: { leagueId: number }): Promise<TeamFact[]> {
-    const teamFacts = await this.teamFactsRepository.query(
+    return this.dataSource.query(
       `SELECT season_id, team_id, full_name, postseason.name FROM teams_tournaments
       INNER JOIN tournaments ON teams_tournaments.tournament_id = tournaments.id
       INNER JOIN leagues ON tournaments.league_id = leagues.id
@@ -142,6 +130,5 @@ export class TeamsStatsService {
       ORDER BY season_id DESC`,
       [query.leagueId],
     );
-    return teamFacts;
   }
 }
