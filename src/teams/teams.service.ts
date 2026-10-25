@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Team } from './entities/team.entity';
-import { ILike, In, Not, Repository } from 'typeorm';
+import { DataSource, ILike, In, Not, Repository } from 'typeorm';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { TeamByLeague } from './entities/teamByLeague.entity';
@@ -19,10 +19,7 @@ export class TeamsService {
     private readonly teamRepository: Repository<Team>,
     @InjectRepository(TeamLogo)
     private teamLogoRepository: Repository<TeamLogo>,
-    @InjectRepository(TeamByLeague)
-    private readonly teamByLeagueRepository: Repository<TeamByLeague>,
-    @InjectRepository(Nation)
-    private readonly nationRepository: Repository<Nation>,
+    private readonly dataSource: DataSource,
   ) {}
 
   findAll(filter?: string): Promise<Team[]> {
@@ -194,7 +191,7 @@ export class TeamsService {
   }
 
   async teamsByLeague(query: { leagueId: number }): Promise<TeamByLeague[]> {
-    const teamsByLeague = await this.teamByLeagueRepository.query(
+    return this.dataSource.query(
       `SELECT DISTINCT ON (teams.full_name) teams.id, teams.nation_id, teams.full_name, nations.flag,
       team_logos.logo FROM teams
   		INNER JOIN nations ON teams.nation_id = nations.id
@@ -205,6 +202,5 @@ export class TeamsService {
       ORDER BY teams.full_name, team_logos.end_year DESC`,
       [query.leagueId],
     );
-    return teamsByLeague;
   }
 }
