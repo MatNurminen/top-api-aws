@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TeamTournament } from './entities/team-tournament.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateTeamTournamentDto } from './dto/create-team-tournament.dto';
 import { UpdateTeamTournamentDto } from './dto/update-team-tournament.dto';
 import { TeamsByTournament } from './entities/teamsByTournament.entity';
@@ -11,6 +11,7 @@ export class TeamsTournamentsService {
   constructor(
     @InjectRepository(TeamTournament)
     private readonly teamTournamentRepository: Repository<TeamTournament>,
+    private readonly dataSource: DataSource,
   ) {}
 
   findAll(): Promise<TeamTournament[]> {
@@ -58,7 +59,7 @@ export class TeamsTournamentsService {
   async teamsByTournament(query: {
     tournamentId: number;
   }): Promise<TeamsByTournament[]> {
-    const teamsByTournament = await this.teamTournamentRepository.query(
+    return this.dataSource.query(
       `SELECT teams_tournaments.id, teams_tournaments.team_id, teams.full_name, 
       nations.flag, tournaments.league_id, leagues.name AS league_name, 
       tournaments.season_id, seasons.name AS season_name FROM teams_tournaments
@@ -71,6 +72,5 @@ export class TeamsTournamentsService {
       ORDER BY full_name`,
       [query.tournamentId],
     );
-    return teamsByTournament;
   }
 }
