@@ -1,7 +1,11 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Tournament } from './entities/tournament.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { UpdateTournamentDto } from './dto/update-tournament.dto';
 import { Season } from '../seasons/entities/season.entity';
@@ -18,6 +22,7 @@ export class TournamentsService {
     private readonly seasonRepository: Repository<Season>,
     @InjectRepository(League)
     private readonly leagueRepository: Repository<League>,
+    private readonly dataSource: DataSource,
   ) {}
 
   findAll(): Promise<Tournament[]> {
@@ -37,26 +42,31 @@ export class TournamentsService {
   }
 
   async create(createTournamentDto: CreateTournamentDto): Promise<Tournament> {
-  const { season_id, league_id } = createTournamentDto;
+    const { season_id, league_id } = createTournamentDto;
 
-  await Promise.all([
-    validateEntityExists(this.seasonRepository, Season, season_id, 'Season'),
-    validateEntityExists(this.leagueRepository, League, league_id, 'League'),
-  ]);
+    await Promise.all([
+      validateEntityExists(this.seasonRepository, Season, season_id, 'Season'),
+      validateEntityExists(this.leagueRepository, League, league_id, 'League'),
+    ]);
 
-  const tournament = this.tournamentRepository.create(createTournamentDto);
-  
-  try {
-    return await this.tournamentRepository.save(tournament);
-  } catch (error) {
-    if (error.code === '23505' || error.code === 'ER_DUP_ENTRY') {
-      throw new ConflictException(
-        `Турнир для сезона ${season_id} и лиги ${league_id} уже существует`
-      );
+    const tournament = this.tournamentRepository.create(createTournamentDto);
+
+    try {
+      return await this.tournamentRepository.save(tournament);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        ((error as any).code === '23505' ||
+          (error as any).code === 'ER_DUP_ENTRY')
+      ) {
+        throw new ConflictException(
+          `Турнир для сезона ${season_id} и лиги ${league_id} уже существует`,
+        );
+      }
+      throw error;
     }
-    throw error;
   }
-}
   async update(
     id: number,
     updateTournamentDto: UpdateTournamentDto,
@@ -92,7 +102,7 @@ export class TournamentsService {
   async tournamentsByLeague(query: {
     leagueId: number;
   }): Promise<TournamentByLeague[]> {
-    const teamsByLeague = await this.tournamentRepository.query(
+    return this.dataSource.query(
       `SELECT tournaments.*, seasons.name as season, leagues.name as league, 
       league_logos.logo FROM tournaments 
       INNER JOIN seasons ON tournaments.season_id = seasons.id 
@@ -102,6 +112,5 @@ export class TournamentsService {
 	    ORDER BY season_id DESC`,
       [query.leagueId],
     );
-    return teamsByLeague;
   }
 }
