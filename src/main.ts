@@ -39,6 +39,6 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new TimeoutInterceptor(reflector));
 
-  await app.listen(3002);
+  await app.listen(3002, '127.0.0.1');
 }
 bootstrap();

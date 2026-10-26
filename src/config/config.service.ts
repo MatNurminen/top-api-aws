@@ -1,6 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-require('dotenv').config();
+//require('dotenv').config();
+require('dotenv').config({
+  path: process.env.STAGE === 'prod' ? '.env.stage.prod' : '.env',
+});
 
 class ConfigService {
   constructor(private readonly env: { [k: string]: string | undefined }) {}
